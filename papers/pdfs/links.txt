@@ -1,0 +1,30 @@
+A Short Introduction to Learning to Rank
+https://www-jstage-jst-go-jp.proxy2.library.illinois.edu/article/transinf/E94.D/10/E94.D_10_1854/_pdf/-char/en
+An Evaluation of Statistical Approaches to Text Categorization
+https://link-springer-com.proxy2.library.illinois.edu/content/pdf/10.1023/A:1009982220290.pdf
+Automatic Labeling of Multinomial Topic Models
+https://dl-acm-org.proxy2.library.illinois.edu/doi/pdf/10.1145/1281192.1281246
+Diagnostic Evaluation of Information Retrieval Models
+https://dl-acm-org.proxy2.library.illinois.edu/doi/10.1145/1961209.1961210?
+Exploiting Context to Identify Lexical Atoms -- A statistical View of Linguistic Context
+https://arxiv.org/pdf/cmp-lg/9701001.pdf
+Information filtering and information retrieval- two sides of the same coin
+https://dl.acm.org/doi/abs/10.1145/138859.138861
+Information Retrieval Evaluation
+https://doi.org/10.2200/S00368ED1V01Y201105ICR019
+Investigating task performance of probabilistic topic models: and empirical study of PLSA and LDA
+https://link-springer-com.proxy2.library.illinois.edu/content/pdf/10.1007/s10791-010-9141-9.pdf
+Methods for Evaluating Interactive Information Retrieval Systems with Users
+http://dx.doi.org/10.1561/1500000012
+Probabilistic Topic Models.
+https://dl.acm.org/doi/pdf/10.1145/2133806.2133826
+Random Walks on Adjacency Graphs for Mining Lexical Relations from Big Text Data
+https://ieeexplore-ieee-org.proxy2.library.illinois.edu/stamp/stamp.jsp?tp=&arnumber=7004272
+Relevance-Based Language Models
+https://sigir.org/wp-content/uploads/2017/06/p260.pdf
+Test Collection Based Evaluation of Information Retrieval Systems
+http://dx.doi.org/10.1561/1500000009
+THE PROBABILITY RANKING PRINCIPLE IN IR
+https://www.emerald.com/insight/content/doi/10.1108/eb026647/full/html
+Two Decades of Statistical Language Modeling where Do We Go From Here
+https://www.cs.cmu.edu/~roni/papers/survey-slm-IEEE-PROC-0004.pdf

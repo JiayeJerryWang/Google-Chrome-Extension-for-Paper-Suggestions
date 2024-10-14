@@ -1,0 +1,11404 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7
+
+Diagnostic Evaluation of Information Retrieval Models
+
+HUI FANG, University of Delaware
+
+TAO TAO, Microsoft Corporation
+
+CHENGXIANG ZHAI, University of Illinois at Urbana-Champaign
+
+Developing effective retrieval models is a long-standing central challenge in information retrieval research.
+
+In order to develop more effective models, it is necessary to understand the deﬁciencies of the current re-
+
+trieval models and the relative strengths of each of them. In this article, we propose a general methodology
+
+to analytically and experimentally diagnose the weaknesses of a retrieval function, which provides guidance
+
+on how to further improve its performance. Our methodology is motivated by the empirical observation
+
+that good retrieval performance is closely related to the use of various retrieval heuristics. We connect the
+
+weaknesses and strengths of a retrieval function with its implementations of these retrieval heuristics, and
+
+propose two strategies to check how well a retrieval function implements the desired retrieval heuristics.
+
+The ﬁrst strategy is to formalize heuristics as constraints, and use constraint analysis to analytically check
+
+the implementation of retrieval heuristics. The second strategy is to deﬁne a set of relevance-preserving per-
+
+turbations and perform diagnostic tests to empirically evaluate how well a retrieval function implements
+
+retrieval heuristics. Experiments show that both strategies are effective to identify the potential problems
+
+in implementations of the retrieval heuristics. The performance of retrieval functions can be improved after
+
+we ﬁx these problems.
+
+Categories and Subject Descriptors: H.3.3 [Information Storage and Retrieval]: Information Search and
+
+Retrieval—Retrieval models
+
+General Terms: Algorithms, Experimentation, Measurement
+
+Additional Key Words and Phrases: Retrieval heuristics, constraints, formal models, TF-IDF weighting,
+
+diagnostic evaluation
+
+ACM Reference Format:
+
+Fang, H., Tao, T., and Zhai, C. 2011. Diagnostic evaluation of information retrieval models. ACM Trans. Inf.
+
+Syst. 29, 2, Article 7 (April 2011), 42 pages.
+
+DOI = 10.1145/1961209.1961210 http://doi.acm.org/10.1145/1961209.1961210
+
+1. INTRODUCTION
+
+The study of retrieval models is central to information retrieval.
+
+Many different
+
+retrieval models have been proposed and tested, including vector space models [Salton
+
+et al. 1975; Salton and McGill 1983; Salton 1989; Singhal et al. 1996a], probabilistic
+
+
+
+Part of the material appeared in Proceedings of the Annual ACM SIGIR Conference on Research and Devel-
+
+opment in Information Retrieval 2004.
+
+This article is based upon work supported in part by the National Science Foundation under grants
+
+IIS-0347933 and IIS- 0713581, and by an Alfred P. Sloan Research Fellowship.
+
+Authors’ addresses: H. Fang, Department of Electrical and Computer Engineering, University of Delaware,
+
+Newark, DE 19716; email:
+
+hfang@ece.udel.edu; T. Tao, Microsoft Corporation, Redmond, WA 98052;
+
+email: taotao@microsoft.com; C. Zhai, Department of Computer Science, University of Illinois at Urbana-
+
+Champaign, Urbana, IL 61801; email: czhai@cs.uiuc.edu.
+
+Permission to make digital or hard copies of part or all of this work for personal or classroom use is granted
+
+without fee provided that copies are not made or distributed for proﬁt or commercial advantage and that
+
+copies show this notice on the ﬁrst page or initial screen of a display along with the full citation. Copyrights
+
+for components of this work owned by others than ACM must be honored. Abstracting with credit is per-
+
+mitted. To copy otherwise, to republish, to post on servers, to redistribute to lists, or to use any component
+
+of this work in other works requires prior speciﬁc permission and/or a fee. Permission may be requested
+
+from Publications Dept., ACM, Inc., 2 Penn Plaza, Suite 701, New York, NY 10121-0701, USA, fax +1 (212)
+
+869-0481, or permissions@acm.org.
+
+c⃝ 2011 ACM 1046-8188/2011/04-ART7 $10.00
+
+DOI 10.1145/1961209.1961210 http://doi.acm.org/10.1145/1961209.1961210
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:2
+
+H. Fang et al.
+
+models [Amati and Rijsbergen 2002; Fuhr 1992; Lafferty and Zhai 2003; Ponte and
+
+Croft 1998; Robertson and Sparck Jones 1976; Turtle and Croft 2003; van Rijbergen
+
+1977], and logic-based models [Fuhr 2001; van Rijsbergen 1986; Wong and Yao 1995].
+
+Despite this progress in the development of formal retrieval models, none of the
+
+state-of-the-art retrieval functions can outperform other functions consistently, and
+
+seeking an optimal retrieval model remains a difﬁcult long-standing challenge in
+
+information retrieval research. For example, it has been more than a decade since the
+
+Okapi (BM25) retrieval function was proposed [Robertson and Walker 1994; Robertson
+
+et al. 1995], but we still have not been able to ﬁnd another retrieval function that is
+
+consistently more robust and effective than Okapi.
+
+A retrieval function is typically evaluated using standard test collections and evalu-
+
+ation measures such as Mean Average Precision (MAP) and precision at 10 documents,
+
+which generally reﬂect the utility of a retrieval function. Unfortunately, such an eval-
+
+uation methodology provides little explanation for the performance differences among
+
+retrieval functions. For example, comparing two retrieval functions based on MAP,
+
+we know which function gives an overall better ranking of documents on a particular
+
+dataset, but it is hard to identify the underlying causes of such performance differ-
+
+ence. The state-of-the-art retrieval functions, when optimized, usually have similar
+
+MAP values even though their function forms are different and their retrieval results
+
+for the same query also tend to differ. This suggests that all the functions may have
+
+their own (potentially different) weaknesses and strengths. Clearly, in order to fur-
+
+ther improve the current generation of retrieval models, it is necessary to understand
+
+their weaknesses, and ideally, pinpoint speciﬁc components in a retrieval function that
+
+hinder its performance so that we can improve the function accordingly [Singhal et al.
+
+1996a, 1998]. Thus, a very interesting and important research question is how to de-
+
+sign a new evaluation methodology to help identify the strengths and weaknesses of
+
+retrieval functions.
+
+In this article, we present a novel methodology to analytically and experimentally
+
+diagnose the weaknesses of a retrieval function, and pinpoint its components that need
+
+to be modiﬁed in order to further improve its retrieval performance. The methodology
+
+can also be used to compare multiple retrieval functions to identify relative strengths
+
+and weaknesses of each function so that we can gain insights about how to combine
+
+the strengths of different retrieval functions.
+
+The motivation of our work comes from the empirical observation that good retrieval
+
+performance is closely related to the use of various retrieval heuristics, especially
+
+TF-IDF weighting and document length normalization. Virtually all the empirically
+
+effective retrieval formulas tend to boil down to an explicit or implicit implementa-
+
+tion of these retrieval heuristics, even though they may be motivated quite differently
+
+(see, e.g., many experiment results reported in TREC1). It thus appears that these
+
+heuristics are somehow necessary for achieving good retrieval performance. However,
+
+different retrieval functions implement the heuristics differently, and it is unclear at
+
+all whether one implementation of a heuristic is better or worse than the others. For
+
+example, monotonic transformation of a component, such as different normalizations
+
+of TF, can easily lead to substantially inferior performance [Salton and Buckley 1988;
+
+Zobel 1998]. Our main idea is, thus, to formalize these retrieval heuristics and further
+
+design tests to evaluate how well a retrieval function implements a retrieval heuristic,
+
+through both analytical analysis and empirical experiments.
+
+Speciﬁcally, we ﬁrst deﬁne a set of basic desirable constraints to capture formally
+
+what are exactly the necessary heuristics. We assume that any reasonable retrieval
+
+
+
+1http://trec.nist.gov/
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:3
+
+function should satisfy these constraints. We then check these constraints on a variety
+
+of retrieval formulas, which respectively represent the vector space model (pivoted
+
+normalization [Singhal et al. 1996a]), the classic probabilistic retrieval model (Okapi
+
+[Robertson and Walker 1994]), the language modeling approach (Dirichlet prior [Zhai
+
+and Lafferty 2001a]), and the divergence from randomness approach (PL2 [Amati and
+
+Rijsbergen 2002]). We ﬁnd that none of these retrieval formulas satisﬁes all the con-
+
+straints unconditionally, though some formulas violate more constraints or violate
+
+some constraints more “seriously” than others. Empirical results show that when a
+
+constraint is not satisﬁed, it often indicates nonoptimality of the method, and when
+
+a constraint is satisﬁed only for a certain range of parameter values, its performance
+
+tends to be poor when the parameter is out of the range. In general, we ﬁnd that
+
+the empirical performance of a retrieval formula is tightly related to how well it sat-
+
+isﬁes these constraints. Thus the proposed constraints provide a good explanation of
+
+many empirical observations about retrieval methods, pinpoint the weaknesses of a
+
+retrieval function analytically, and suggest how we may further improve a retrieval
+
+function based on the constraints analysis.
+
+Unfortunately, because we require the constraints to be necessary conditions that
+
+a retrieval function should satisfy, the number of constraints that can be deﬁned in
+
+this way is inevitably limited. Thus if all the retrieval functions to be compared satisfy
+
+all the deﬁned retrieval constraints, or they all satisfy the same set of constraints,
+
+constraint analysis alone would not be very helpful to understand the limitation of a
+
+function or the relative strengths and weaknesses of each function.
+
+To address this limitation, we further propose an approach to diagnose the weak-
+
+nesses of retrieval functions experimentally. Our main idea is to carefully design a set
+
+of diagnostic tests to amplify the differences of performance among retrieval functions
+
+under different conditions designed to capture various retrieval heuristics. Speciﬁcally,
+
+we ﬁrst deﬁne a set of relevance-preserving collection perturbation operators as the
+
+basic tools for diagnostic tests. Such collection perturbations would create “extreme
+
+conditions” of datasets so as to amplify the differences among the retrieval functions
+
+in their effectiveness in handling the extreme conditions, which are designed based on
+
+speciﬁc retrieval heuristics such as document length normalization. We present a com-
+
+mon procedure for designing diagnostic tests for retrieval models based on the deﬁned
+
+perturbation operators. Following the proposed procedure, we design a group of diag-
+
+nostic tests to examine different aspects of retrieval functions, including robustness in
+
+handling variations of document lengths, resistance to noisy terms, and appropriate
+
+balance of term frequency and length normalization.
+
+Empirical results demonstrate several beneﬁts of the proposed diagnosis methodol-
+
+ogy. First, it can reveal several clear differences among retrieval functions that cannot
+
+be revealed through constraint analysis or regular Cranﬁeld-style evaluation. Second,
+
+as in the case of constraint analysis, empirical diagnosis also helps identify speciﬁc
+
+strengths and weaknesses of retrieval functions in implementing different retrieval
+
+heuristics and provides guidance on how to modify a retrieval function, or combine
+
+different retrieval functions to achieve better performance. Based on such analysis of
+
+representative state-of-the-art retrieval functions, we propose some variants of the ex-
+
+isting retrieval functions. Evaluation on eight representative datasets shows that the
+
+proposed variants outperform the corresponding original retrieval functions in most
+
+cases, indicating the effectiveness of the proposed diagnosis evaluation method in pro-
+
+viding guidance for improving existing retrieval functions.
+
+The rest of the article is organized as follows. We ﬁrst present seven formally deﬁned
+
+retrieval constraints in Section 2. In Section 3, we apply these constraints to a variety
+
+of representative retrieval formulas and show that the satisfaction of these constraints
+
+is closely related to the empirical performance of a retrieval function. We then present
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:4
+
+H. Fang et al.
+
+diagnostic tests in Section 4, and show experiment results of diagnostic tests in Section
+
+5. We discuss how to improve retrieval functions based on the results of diagnostic
+
+tests in Section 6, and summarize the overall diagnostic evaluation methodology in
+
+Section 7. Related work is discussed in Section 8. Finally, we conclude our work and
+
+discuss future research directions in Section 9.
+
+2. FORMAL CONSTRAINTS ON RETRIEVAL FUNCTIONS
+
+In this section, we formally deﬁne seven intuitive and desirable constraints that any
+
+reasonable retrieval formula should satisfy. They capture the commonly used retrieval
+
+heuristics, such as TF-IDF weighting, in a formal way, making it possible to apply them
+
+to any retrieval formula analytically.
+
+These constraints are motivated by the following observations on some common
+
+characteristics of typical retrieval formulas.
+
+First, most retrieval methods assume
+
+a “bag of words” (more precisely, “bag of terms”) representation of both documents
+
+and queries. Second, a highly effective retrieval function typically involves a TF part,
+
+an IDF part, and a document length normalization part [Hiemstra 2000; Salton and
+
+Buckley 1988; Singhal et al. 1996a; Zobel 1998]. The TF part intends to give a higher
+
+score to a document that has more occurrences of a query term, while the IDF part
+
+is to penalize words that are popular in the whole collection. The document length
+
+normalization is to avoid favoring long documents; long documents generally have
+
+more chances to match a query term, simply because they contain more words. Finally,
+
+different retrieval formulas do differ in their ways of combining all these factors, even
+
+though their empirical performances may be similar.
+
+These observations suggest that there are some “basic requirements” that all rea-
+
+sonable retrieval formulas should follow. For example, if a retrieval formula does not
+
+penalize common words, then it somehow violates the “IDF requirement,” thus can be
+
+regarded as “unreasonable.” However, some of these requirements may compromise
+
+each other. For example, while the TF heuristic intends to assign a higher score to
+
+a document that has more occurrences of a query term, the document length normal-
+
+ization component may cause a long document with a higher TF to receive a lower
+
+score than a short document with a lower TF. Similarly, if two documents match pre-
+
+cisely one single, but different, query term, the IDF heuristic may allow a document
+
+with a lower TF to “beat” the one with a much higher TF. A critical question is thus
+
+how we can regulate such interactions so that they will all be “playing a fair game.”
+
+Clearly, in order to answer this question, we must ﬁrst deﬁne what is a “fair game,”
+
+that is, we must deﬁne what exactly is a reasonable retrieval function. To achieve this
+
+goal, we propose to characterize a reasonable retrieval formula by listing the desirable
+
+constraints that any reasonable retrieval formula must satisfy.
+
+We now formally deﬁne seven such desirable constraints.
+
+Note that these con-
+
+straints are necessary, but not necessarily sufﬁcient, and should not be regarded as
+
+the only constraints that we want a retrieval function to satisfy; indeed, it is possi-
+
+ble to come up with additional constraints that may also make sense. However, we
+
+focus on these seven basic constraints in this article because they capture the major
+
+well-known IR heuristics, particularly TF-IDF weighting and length normalization.
+
+Let us ﬁrst introduce some notations. We use D to denote a document, Q to denote
+
+a query, and q or t to represent a term. c(t, D) is the count of term t in document D. |D|
+
+denotes the length of document D. Sdenotes a retrieval function, and S(Q, D) gives the
+
+score of document D with respect to query Q. td(t) denotes any reasonable measure of
+
+term discrimination value (usually based on term popularity in a collection). It gives
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:5
+
+higher weights to more discriminative terms. For example, td(t) can be the Inverse
+
+Document Frequency (IDF) of term t.
+
+2.1. Term Frequency Constraints (TFCs)
+
+We deﬁne three constraints to capture the desired contribution of term frequency of a
+
+term to scoring.
+
+TFC1. Let Q = {q} be a query with only one term q.
+
+Assume |D1| = |D2|.
+
+If
+
+c(q, D1) &gt; c(q, D2), then S(Q, D1) &gt; S(Q, D2).
+
+TFC2. Let Q = {q} be a query with only one term q. Assume |D1| = |D2| = |D3|
+
+and c(q, D1) &gt; 0. If c(q, D2) − c(q, D1) = 1 and c(q, D3) − c(q, D2) = 1, then S(Q, D2) −
+
+S(Q, D1) &gt; S(Q, D3) − S(Q, D2).
+
+TFC3. Let Q be a query and q1, q2 ∈ Q be two query terms. Assume |D1| = |D2|
+
+and td(q1) = td(q2), where td(t) can be any reasonable measure of term discrimination
+
+value. If c(q1, D1) = c(q1, D2) + c(q2, D2) and c(q2, D1) = 0, c(q1, D2) ̸= 0,c(q2, D2) ̸= 0,
+
+then S(Q, D1) &lt; S(Q, D2).
+
+The ﬁrst constraint captures the basic TF heuristic, which gives a higher score to
+
+a document with more occurrences of a query term when the only difference between
+
+two documents is the occurrences of the query term. In other words, the score of a
+
+retrieval formula should increase with the increase in TF (i.e., the ﬁrst partial deriv-
+
+ative of the formula with respect to the TF variable should be positive). The second
+
+constraint ensures that the increase in the score due to an increase in TF is smaller for
+
+larger TFs (i.e., the second partial derivative with respect to the TF variable should be
+
+negative). Here, the intuition is that the change in the score caused by increasing TF
+
+from 1 to 2 should be larger than that caused by increasing TF from 100 to 101. The
+
+third constraint implies another desirable property: if two documents have the same
+
+total occurrences of all query terms and all the query terms have the same term dis-
+
+crimination value, a higher score will be given to the document covering more distinct
+
+query terms.
+
+2.2. Term Discrimination Constraint (TDC)
+
+We deﬁne this constraint to capture the desired term discrimination scoring.
+
+TDC. Let D be a document and Q = {q1, q2} be a query. Assume there are two
+
+documents D1 and D2, where |D1| = |D2|, D1 contains only q1 and D2 contains only
+
+q2. If td(q1) &gt; td(q2) , then S(Q, D ∪ D1) &gt; S(Q, D ∪ D2).
+
+This constraint implies that we need to penalize the terms popular in the collection.
+
+It is essentially the basic constraint of the M-TDC (modiﬁed TDC) proposed in Shi
+
+et al. [2005]. Based on TFC2 and TDC, the following constraint can be derived. Let D
+
+be a document and Q be a query. If q1 ∈ Q, q2 ∈ Q, q1 ∈ D, q2 ∈ D, td(q1) &gt; td(q2) and
+
+c(q1, D) ≤ c(q2, D), then S(Q, D ∪ {q1}) &gt; S(Q, D ∪ {q2}).
+
+This constraint is a relaxed formulation of the original TDC deﬁned in Fang et al.
+
+[2004], which might be too strong and overfavor terms with higher term discrimination
+
+value. For example, according to the original constraint, given a query “SVM tutorial,”
+
+a document with 99 occurrences of “SVM” and 1 occurrence of “tutorial” should receive
+
+a higher relevance score than another document with 50 occurrences of “SVM tutorial”,
+
+which is somewhat counterintuitive.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:6
+
+H. Fang et al.
+
+2.3. Length Normalization Constraints (LNCs)
+
+We deﬁne two constraints to quantify the penalty on long documents.
+
+LNC1. Let Q be a query and D1, D2 be two documents. If for some word t /∈ Q,
+
+c(t, D2) = c(t, D1) + 1 but for any other term w, c(w, D2) = c(w, D1), then S(Q, D1) ≥
+
+S(Q, D2).
+
+LNC2. Let Q be a query and q ∈ Q be a query term. ∀k &gt; 1, if D1 and D2 are
+
+two documents such that |D1| = k · |D2|, c(q, D2) &gt; 0 and for all terms w, c(w, D1) =
+
+k · c(w, D2), then S(Q, D1) ≥ S(Q, D2).
+
+The ﬁrst constraint says that the score of a document should decrease if we add an
+
+extra occurrence of a “nonrelevant word” (i.e., a word not in the query). The second
+
+constraint intends to avoid overpenalizing long relevant documents, as it says that if a
+
+document D has at least one query term, and we concatenate the document with itself
+
+k times to form a new document, then the relevance score of the new document should
+
+not be lower than the original one. Here, we make the assumption that the redundant
+
+issue is not considered.
+
+2.4. TF-LENGTH Constraint (TF-LNC)
+
+We
+
+deﬁne
+
+this
+
+constraint
+
+to
+
+balance
+
+term
+
+frequency
+
+heuristics
+
+and
+
+length
+
+normalization.
+
+TF-LNC. Let Q = {q} be a query with only one term q.
+
+If D1 and D2 are two
+
+documents such that c(q, D1) &gt; c(q, D2) and |D1| = |D2| + c(q, D1) − c(q, D2), then
+
+S(Q, D1) &gt; S(Q, D2).
+
+This constraint regulates the interaction between TF and document length. It en-
+
+sures that the relevance score would not decrease after adding more query terms to a
+
+document. The intuition is that if D1 is generated by adding more occurrences of the
+
+query term to D2, the score of D1 should be higher than D2.
+
+Based on TF-LNC and LNC1, it is not hard to derive the following constraint:
+
+Let Q = {q} be a query with only one term q. If D2 and D3 are two documents such
+
+that c(q, D3) &gt; c(q, D2) and |D3| &lt; |D2| + c(q, D3) − c(q, D2), then S(Q, D3) &gt; S(Q, D2).
+
+To see why, assume we have a document D1 such that |D1| = |D2|+c(q, D1)−c(q, D2)
+
+and c(q, D3) = c(q, D1). It is obvious that the only difference between D1 and D3 is
+
+that D1 has more occurrences of the nonquery terms. According to LNC1, we know
+
+that S(Q, D3) ≥ S(Q, D1). Since S(Q, D1) &gt; S(Q, D2) follows from TF-LNC, it is clear
+
+that S(Q, D3) &gt; S(Q, D2).
+
+This constraint ensures that document D1, which has a higher TF for the query
+
+term, should have a higher score than D2, which has a lower TF, as long as D1 is not
+
+too much longer than D2.
+
+The ﬁrst four constraints (i.e., TFCs and TDC) are intended to capture the desired
+
+scoring preferences when two documents have equal lengths. The other three con-
+
+straints are applicable when we have variable document lengths.
+
+Table I summarizes the intuitions behind each formalized constraint. In fact, TFC1
+
+can be derived from LNC1 and TF-LNC. We still present TFC1 in the article, because
+
+it is the most intuitive constraint.
+
+All the other constraints deﬁned are basic and
+
+nonredundant in the sense that none of them can be derived from the others. Formally,
+
+suppose C = {C1, ..., Cn} is a set of retrieval constraints, Si is the set of all the retrieval
+
+functions satisfying constraint Ci. Ci and C j are not redundant, if and only if the set
+
+differences Si\S j and S j\Si are both nonempty, that is, |Si\S j| &gt; 0, and |S j\Si| &gt; 0.
+
+We must emphasize once again that the constraints proposed in this section are
+
+necessary for a reasonable retrieval formula, but not necessarily sufﬁcient, and should
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:7
+
+Table I. Summary of Intuitions for Each Formalized Constraint
+
+
+
+
+
+Constraints
+
+
+
+Intuitions
+
+
+
+
+
+
+
+TFC1
+
+
+
+to favor a document with more occurrences of a query term
+
+
+
+
+
+
+
+TFC2
+
+
+
+to ensure that the amount of increase in score due to
+
+
+
+
+
+
+
+adding a query term repeatedly must decrease as more terms are added
+
+
+
+
+
+
+
+TFC3
+
+
+
+to favor a document matching more distinct query terms
+
+
+
+
+
+
+
+TDC
+
+
+
+to penalize the words popular in the collection
+
+
+
+
+
+
+
+and assign higher weights to discriminative terms
+
+
+
+
+
+
+
+LNC1
+
+
+
+to penalize a long document(assuming equal TF)
+
+
+
+
+
+
+
+LNC2, TF-LNC
+
+
+
+to avoid over-penalizing a long document
+
+
+
+
+
+
+
+TF-LNC
+
+
+
+to regulate the interaction of TF and document length
+
+
+
+
+
+not be regarded as the only constraints that a reasonable retrieval formula has to sat-
+
+isfy. When any constraint is violated, we know the retrieval function may not perform
+
+well empirically, but satisfying all the constraints does not necessarily guarantee good
+
+performance.
+
+3. CONSTRAINT ANALYSIS ON REPRESENTATIVE RETRIEVAL FUNCTIONS
+
+In this section, we apply the seven constraints deﬁned in the previous section to
+
+four state-of-the-art retrieval functions which, respectively, represent the vector space
+
+model (pivoted normalization [Singhal et al. 1996a; Singhal 2001]), the classic prob-
+
+abilistic retrieval model (Okapi [Robertson et al. 1995]), the language modeling ap-
+
+proach (Dirichlet prior smoothing [Zhai and Lafferty 2001a]), and the divergence from
+
+randomness model (PL2 [Amati and Rijsbergen 2002; He and Ounis 2005]). Our goal
+
+is to see how well each retrieval formula satisﬁes the proposed constraints and how
+
+closely the constraint analysis results are related to the empirical performance of a
+
+retrieval function. As will be shown, it turns out that none of these retrieval formulas
+
+satisﬁes all the constraints unconditionally, though some models violate more con-
+
+straints or violate some constraints more “seriously” than others. The analysis thus
+
+suggests some hypotheses regarding the empirical behavior of these retrieval formu-
+
+las. Furthermore, empirical results show that when a constraint is not satisﬁed, it
+
+often indicates nonoptimality of the method, and when a constraint is satisﬁed only
+
+for a certain range of parameter values, its performance tends to be poor when the
+
+parameter is out of the range. In general, we ﬁnd that the empirical performance of a
+
+retrieval formula is tightly related to how well it satisﬁes these constraints. Thus the
+
+proposed constraints provide a good explanation of many empirical observations about
+
+retrieval methods. More importantly, they make it possible to evaluate any existing
+
+or new retrieval formula analytically to obtain insights about how we may further
+
+improve a retrieval formula.
+
+The following notations will be used in this section:
+
+— c(t, D) is the count of term t in the document D.
+
+— c(t, Q) is the count of term t in the query Q.
+
+— N is the total number of documents in the collection.
+
+— df(t) is the number of documents that contain the term t.
+
+— |D| is the length of document D.
+
+— avdl is the average document length.
+
+— |Q| is the length of query Q.
+
+— c(t, C) is the count of term t in the collection C.
+
+— p(t|C) is the probability of a term t given by the collection language model [Zhai and
+
+Lafferty 2001a].
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:8
+
+H. Fang et al.
+
+Table II. Constraint Analysis Results (Pivoted)
+
+
+
+
+
+TFCs
+
+
+
+TDC
+
+
+
+LNC1
+
+
+
+LNC2
+
+
+
+TF-LNC
+
+
+
+
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Cond.
+
+
+
+Cond.
+
+
+
+
+
+3.1. Constraint Analysis
+
+3.1.1. Pivoted Normalization Method. In the vector space model, text is represented by a
+
+vector of terms. Documents are ranked by the similarity between a query vector and
+
+document vectors. The pivoted normalization retrieval formula [Singhal 2001] is one
+
+of the best performing vector space retrieval formulas.
+
+S(Q, D) =
+
+�
+
+t∈D∩Q
+
+1 + ln(1 + ln(c(t, D)))
+
+
+
+(1 − s) + s |D|
+
+
+
+avdl
+
+· c(t, Q) · lnN + 1
+
+
+
+df(t)
+
+(1)
+
+The results of analyzing the pivoted normalization formula are summarized in
+
+Table II, where TFCs means TFC1, TFC2, and TFC3. It is easy to prove that TFCs,
+
+TDC, and LNC1 can be satisﬁed unconditionally. We now examine some of the non-
+
+trivial constraints.
+
+First, let us examine the TF-LNC constraint.
+
+Consider a common case when
+
+|D1| = avdl. It can be shown that the TF-LNC constraint is equivalent to the following
+
+constraint on the parameter s:
+
+s ≤
+
+l(c(t, D1)) − l(c(t, D2))
+
+
+
+(c(t, D1) − c(t, D2)) × (1 + l(c(t, D1))) × avdl,
+
+where l(x) = ln(1 + ln(x)).
+
+This means that TF-LNC is satisﬁed only if s is below a certain upper bound. The
+
+TF-LNC constraint thus provides an upper bound for s which is tighter for a larger
+
+c(t, D1). However, when c(t, D1) is small, the TF-LNC constraint does not provide any
+
+effective bound for s, since s ≤ 1.
+
+Finally, we show that the LNC2 leads to an upper bound for parameter s as well.
+
+The LNC2 constraint is equivalent to
+
+1 + ln(1 + ln(k × c(t, D2)))
+
+
+
+1 − s + sk×|D2|
+
+
+
+avdl
+
+≥ 1 + ln(1 + ln(c(t, D2)))
+
+
+
+1 − s + s|D2|
+
+
+
+avdl
+
+.
+
+Therefore, the upper bound of s can be derived as
+
+s ≤
+
+tf1 − tf2
+
+
+
+(k |D2|
+
+
+
+avdl − 1)tf2 − ( |D2|
+
+
+
+avdl − 1)tf1
+
+,
+
+where tf1 = 1 + ln(1 + ln(k × c(t, D2))), tf2 = 1 + ln(1 + ln(c(t, D2))). In order to get a sense
+
+of what the bound is exactly, consider a common case when |D2| = avdl. We have
+
+s ≤
+
+1
+
+
+
+k − 1 × (tf1
+
+
+
+tf2
+
+− 1).
+
+As shown in Figure 1, the bound becomes tighter when k increases or when the term
+
+frequency is larger. This bound shows that in order to avoid overpenalizing a long
+
+document, a reasonable value for s should be generally small; it should be below 0.4
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:9
+
+Fig. 1.
+
+Upper bound of parameter s.
+
+even in the case of a small k, and we know that for a larger k the bound would be even
+
+tighter. This analysis thus suggests that the performance can be poor for a large s,
+
+which is conﬁrmed by our experiments.
+
+3.1.2.
+
+Okapi Method. The Okapi formula is another highly effective retrieval for-
+
+mula that represents the classical probabilistic retrieval model [Robertson and Walker
+
+1994]. The formula as presented in Singhal [2001] is2
+
+S(Q, D) =
+
+�
+
+t∈Q∩D
+
+�
+
+ln N − df(t) + 0.5
+
+
+
+df(t) + 0.5
+
+×
+
+(k1 + 1) × c(t, D)
+
+
+
+k1((1 − b) + b |D|
+
+
+
+avdl) + c(t, D)
+
+× (k3 + 1) × c(t, Q)
+
+
+
+k3 + c(t, Q)
+
+�
+
+,
+
+(2)
+
+where k1 (between 1.0-2.0), b (usually 0.75), and k3 (between 0-1000) are constants.
+
+The major difference between Okapi and other retrieval formulas is the possibly
+
+negative value of the IDF part, which has been discussed in Robertson and Walker
+
+[1997]. It is trivial to show that if df(t) &gt; N/2, the IDF value would be negative.
+
+When the IDF part is positive (which is mostly true for keyword queries), it is easy
+
+to see that Okapi method satisﬁes TFCs and LNCs. By considering a common case
+
+when |D2| = avdl, the TF-LNC constraint is shown to be equivalent to b ≤
+
+avdl
+
+
+
+c(t,D2). Since
+
+b is always smaller than 1, TF-LNC can be satisﬁed unconditionally. Moreover, we can
+
+show that TDC is unconditionally satisﬁed.
+
+Although Okapi satisﬁes some constraints conditionally, unlike in the pivoted nor-
+
+malization method, the conditions do not provide any bound for the parameter b.
+
+Therefore, the performance of Okapi can be expected to be less sensitive to the length
+
+normalization parameter than the pivoted normalization method, which is conﬁrmed
+
+by our experiments.
+
+When the IDF part is negative, the Okapi formula would satisfy TDC but violate
+
+the TFCs, LNCs, and TF-LNC, since matching an additional occurrence of a query
+
+term could mean decreasing the score. Since a negative IDF only happens when a
+
+query term has a very high document frequency (e.g., when the query is verbose), our
+
+analysis suggests that the performance of Okapi may be relatively worse for verbose
+
+queries than for keyword queries.
+
+
+
+2There is a typo in the formula in Singhal [2001], which is corrected here.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:10
+
+H. Fang et al.
+
+Table III. Constraint Analysis Results (Okapi)
+
+
+
+
+
+Formula
+
+
+
+TFCs
+
+
+
+TDC
+
+
+
+LNC1
+
+
+
+LNC2
+
+
+
+TF-LNC
+
+
+
+
+
+
+
+Original
+
+
+
+Cond.
+
+
+
+Yes
+
+
+
+Cond.
+
+
+
+Cond.
+
+
+
+Cond.
+
+
+
+
+
+
+
+Modiﬁed
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+
+
+Table IV. Constraint Analysis Results (Dirichlet)
+
+
+
+
+
+TFCs
+
+
+
+TDC
+
+
+
+LNC1
+
+
+
+LNC2
+
+
+
+TF-LNC
+
+
+
+
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Cond
+
+
+
+Yes
+
+
+
+
+
+A simple way to solve the problem of negative IDF is to replace the original IDF in
+
+Okapi with the regular IDF in the pivoted normalization formula.
+
+S(Q, D) =
+
+�
+
+t∈Q∩D
+
+�
+
+lnN + 1
+
+
+
+df(t) ×
+
+(k1 + 1) × c(t, D)
+
+
+
+k1((1 − b) + b |D|
+
+
+
+avdl) + c(t, D)
+
+× (k3 + 1) × c(t, Q)
+
+
+
+k3 + c(t, Q)
+
+�
+
+This modiﬁed Okapi satisﬁes all the deﬁned constraints. We thus hypothesize that
+
+modiﬁed Okapi would perform better than the original Okapi for verbose queries. As
+
+will be shown later, this is indeed true according to our experiment results.
+
+The results of analyzing the Okapi formula are summarized in Table III. We distin-
+
+guish two forms of the formula: the original formula and the one with a modiﬁed IDF
+
+part. The modiﬁcation signiﬁcantly affects the constraint analysis results as discussed
+
+earlier.
+
+3.1.3. Dirichlet Prior Method. The Dirichlet prior retrieval method is one of the best per-
+
+forming language modeling approaches [Zhai and Lafferty 2001a]. This method uses
+
+the Dirichlet prior smoothing method to smooth a document language model and then
+
+ranks documents according to the likelihood of the query according to the estimated
+
+language model of each document. With a notation consistent with the preceding for-
+
+mulas, the Dirichlet prior retrieval function is
+
+S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) · ln(1 +
+
+c(t, D)
+
+
+
+μ · p(t|C)) + |Q| · ln
+
+μ
+
+
+
+|D| + μ.
+
+(3)
+
+p(t|C) is similar to the document frequency df(t), and it indicates how popular the term
+
+t is in the whole collection.
+
+The results of analyzing the Dirichlet prior formula are summarized in Table IV.
+
+TFCs, TDC, LNC1, and TF-LNC are easily seen to be satisﬁed. The LNC2 constraint
+
+can be shown to be equivalent to c(t, D2) ≥ |D2| · p(t|C), which is usually satisﬁed for
+
+content-carrying words. If all the query terms are discriminative words, long docu-
+
+ments will not be overpenalized. Thus, compared to pivoted normalization, Dirichlet
+
+prior appears to have a more robust length normalization mechanism, even though
+
+none of them satisﬁes the LNC2 constraint unconditionally.
+
+3.1.4. PL2 Method. The PL2 method is a representative retrieval function of the Di-
+
+vergence From Randomness (DFR) retrieval model [Amati and Rijsbergen 2002; He
+
+and Ounis 2005]. The basic idea of PL2 is to measure the informative content of a
+
+term by computing how much the term frequency distribution departs from a distribu-
+
+tion described by a random process. With the previous notations, the PL2 method can
+
+be described as
+
+S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) ·
+
+tfnD
+
+t · log2(tfnD
+
+t · λt) + log2e · ( 1
+
+
+
+λt − tfnD
+
+t ) + 0.5 · log2(2π · tfnD
+
+t )
+
+
+
+tfnD
+
+t + 1
+
+,
+
+(4)
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:11
+
+Table V. Constraint Analysis Results (PL2)
+
+
+
+
+
+Functions
+
+
+
+TFCs
+
+
+
+TDC
+
+
+
+LNC1
+
+
+
+LNC2
+
+
+
+TF-LNC
+
+
+
+
+
+
+
+PL2
+
+
+
+Cond
+
+
+
+Cond
+
+
+
+Cond
+
+
+
+Cond
+
+
+
+Cond
+
+
+
+
+
+
+
+Mod.-PL2
+
+
+
+Yes
+
+
+
+Cond
+
+
+
+Yes
+
+
+
+Cond
+
+
+
+Cond
+
+
+
+
+
+Fig. 2.
+
+TF curves are sensitive to term discrimination value: left plot (λt = 2) - TF constraints satisﬁed;
+
+right plot (λt = 0.5) - TF constraints violated.
+
+where tfnD
+
+t = c(t, D) × log2(1 + c · avdl
+
+
+
+|D| ), λt =
+
+N
+
+
+
+c(t,C) and c &gt; 0 is a retrieval parameter.
+
+The constraint analysis results of the PL2 method are summarized in Table V. Un-
+
+like the previous three retrieval functions, the PL2 method cannot unconditionally
+
+satisfy any of the retrieval constraints. In particular, we can make the following two
+
+interesting observations.
+
+First, the analysis of the TDC, LNC2, and TF-LN constraints suggests a lower
+
+bound for the retrieval parameter c in the PL2 method. Speciﬁcally, assuming that
+
+|D| = avdl, we can show that the PL2 function can satisfy TDC if c &gt; 2
+
+log2e
+
+
+
+λt − 1. More-
+
+over, constraints LNC2 and TF-LN can be shown to be equivalent to c ≥ |D|
+
+
+
+avdl, which is
+
+c ≥ 1 under the assumption that |D| = avdl. Clearly, the analysis results suggest that
+
+PL2 would violate the retrieval constraints for smaller values of c. Thus, we expect it
+
+to perform poorly for a smaller c, which is conﬁrmed by our experiments.
+
+Second, the term discrimination values (i.e., λt) affect whether the PL2 retrieval
+
+function satisﬁes a retrieval constraint. In particular, it can be shown that the three
+
+TF constraints are equivalent to the following constraint on the term discrimination
+
+value (λt) of term t.
+
+λt ∗ log(λt) + 0.18 ∗ λt ≥ log2e
+
+This means that the three TF constraints are satisﬁed only when query terms have
+
+term discrimination values that are larger than a threshold around 1. For example,
+
+Figure 2 shows two curves of relevance scores (i.e., S(Q, D)) with respect to the values
+
+of the TF component (i.e., c(t, D) · log2(1 + c avdl
+
+
+
+|D| )) for a query with a relatively discrim-
+
+inative term (λt = 2, shown on left) and one with a common word ( λt = 0.5, shown
+
+on right), respectively. We see clearly that PL2 violates the deﬁned TF constraints in
+
+the right plot where the term discrimination value is small. Moreover, the analysis
+
+of LNC1 constraint also provides a similar lower bound for the term discrimination
+
+values, that is, λt ≥ 1.
+
+Thus if a query contains a term with smaller term discrimination values, the PL2
+
+function would violate the TF constraints and LNC1 constraint, which means that in
+
+such a case, more occurrences of a query term in a document may actually lead to
+
+lower relevance scores. This further suggests that the PL2 function would perform
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:12
+
+H. Fang et al.
+
+Table VI. Summary of Constraint Analysis Results for Different
+
+Retrieval Formulas
+
+
+
+
+
+Formula
+
+
+
+TFCs
+
+
+
+TDC
+
+
+
+LNC1
+
+
+
+LNC2
+
+
+
+TF-LNC
+
+
+
+
+
+
+
+Pivoted
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+C∗
+
+1
+
+
+
+C∗
+
+2
+
+
+
+
+
+
+
+Dirichlet
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+C3
+
+
+
+Yes
+
+
+
+
+
+
+
+Okapi(original)
+
+
+
+C4
+
+
+
+Yes
+
+
+
+C4
+
+
+
+C4
+
+
+
+C4
+
+
+
+
+
+
+
+Okapi(modiﬁed)
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+Yes
+
+
+
+
+
+
+
+PL2(original)
+
+
+
+C5
+
+
+
+C∗
+
+6
+
+
+
+C7
+
+
+
+C∗
+
+8
+
+
+
+C∗
+
+8
+
+
+
+
+
+
+
+PL2(modiﬁed)
+
+
+
+Yes
+
+
+
+C∗
+
+6
+
+
+
+Yes
+
+
+
+C∗
+
+8
+
+
+
+C∗
+
+8
+
+
+
+
+
+worse for verbose queries than for keyword queries, which again is conﬁrmed in our
+
+experiments.
+
+The analysis suggests that a simple way to potentially improve the performance
+
+of PL2 for verbose queries is to consider only the query terms whose values of λt are
+
+larger than 1 (the threshold obtained from constraint analysis). The modiﬁed PL2 is
+
+as follows.
+
+S(Q, D) =
+
+�
+
+t∈Q∩D,λt&gt;1
+
+c(t, Q) ·
+
+tfnD
+
+t · log2(tfnD
+
+t · λt) + log2e · ( 1
+
+
+
+λt − tfn D
+
+t ) + 0.5 · log2(2π · tfnD
+
+t )
+
+
+
+tfnD
+
+t + 1
+
+The only difference from the standard PL2 is the extra condition λt &gt; 1 derived from
+
+the analysis of the TF constraints and LNC1 constraint. The motivation of this mod-
+
+iﬁed function is to ignore query terms violating the retrieval constraints. This is rea-
+
+sonable since these terms have term discriminative values smaller than 1, that is, each
+
+of these terms has, on average, at least one occurrence in every document of the collec-
+
+tion. The effect of this modiﬁed retrieval function is similar to stopwords removal, but
+
+the modiﬁcation is guided by the constraint analysis and the proposed method is more
+
+adaptive to the characteristics of different document collections.
+
+The modiﬁed PL2 method satisﬁes the three TFCs and LNC1 constraints uncon-
+
+ditionally and the other constraints conditionally. When the retrieval parameter c is
+
+set to a value larger than a threshold, the modiﬁed PL2 method would satisfy all the
+
+constraints. We thus hypothesize that modiﬁed PL2 would perform better than the
+
+original PL2 for verbose queries when c is set appropriately based on the guidance
+
+provided by the constraint analysis. As will be shown later, this hypothesis is indeed
+
+conﬁrmed by our experiment results.
+
+3.1.5. Summary of Constraint Analysis Results. We have applied the proposed seven con-
+
+straints to four representative retrieval formulas.
+
+The results are summarized in
+
+Table VI, where a “Yes” means that the corresponding model satisﬁes the particu-
+
+lar constraint and a “Cx” means that the corresponding model satisﬁes the constraint
+
+under some particular conditions not related to parameter setting, and a “C∗
+
+x” means
+
+that the model satisﬁes the constraint only when the parameter is in some range. The
+
+speciﬁc conditions are
+
+C∗
+
+1 ⇔ s ≤
+
+tf1 − tf2
+
+
+
+(k |D2|
+
+
+
+avdl − 1)tf2 − ( |D2|
+
+
+
+avdl − 1)tf1
+
+C∗
+
+2 ⇔ s ≤
+
+(l(c(t, D1)) − l(c(t, D2))) × avdl
+
+
+
+(c(t, D1) − c(t, D2)) × (1 + l(c(t, D1)))
+
+C3 ⇔ c(t, D2) ≥ |D2| · p(t|C)
+
+C4 ⇔ idf(t) ≥ 0 ⇔ df(t) ≤ N/2
+
+C5 ⇔ λt ∗ log(λt) + 0.18 ∗ λt ≥ log2e
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:13
+
+C∗
+
+6 ⇔ c &gt; 2
+
+log2e
+
+
+
+λt − 1
+
+C7 ⇔ λt ≥ 1 ⇔ N ≥ c(t, C)
+
+C∗
+
+8 ⇔ c ≥ |D|
+
+
+
+avdl.
+
+Based on the results, we can make three interesting observations: First, the original
+
+IDF part of the Okapi formula causes the formula to violate almost all constraints
+
+(see also Robertson and Walker [1997] for a discussion about this weakness), thus
+
+we may expect Okapi to have worse performance for verbose queries. Second, the
+
+implementation of term discrimination part in PL2 (i.e., λt) causes it to violate several
+
+constraints for nondiscriminative terms, thus we may also expect PL2 to perform worse
+
+for verbose queries. Third, C1 and C2 provide an approximate upper bound for the
+
+parameter s in the pivoted normalization method, while C6 and C8 provide a lower
+
+bound for the parameter c in the PL2 method. In contrast, however, by checking the
+
+constraints, we have not found any particular bound for the parameters in Dirichlet
+
+prior and Okapi. Therefore, we may expect the pivoted normalization method and PL2
+
+method to be more sensitive to the parameter setting than the other two methods.
+
+As we will further discuss in the next section, these predictions have been mostly
+
+conﬁrmed in our experiments.
+
+3.2. Beneﬁts of Constraint Analysis
+
+In the previous subsection, we have examined four representative retrieval formulas
+
+analytically. Based on the analysis, we propose some hypotheses about the perfor-
+
+mance for each retrieval formula. In this section, we test these hypotheses through
+
+carefully designed experiments. Our experiment results show that the proposed con-
+
+straints can explain the performance difference in various retrieval models, provide an
+
+approximate bound for the parameters in a retrieval formula, and enable us to ana-
+
+lytically diagnose the weaknesses of a retrieval function to obtain guidance on how to
+
+improve a retrieval function.
+
+3.2.1. Experiment Design. Retrieval performance can vary signiﬁcantly from one test
+
+collection to another. We thus construct several very different and representative test
+
+collections using the existing TREC test collections. To cover different types of queries,
+
+we follow Zhai and Lafferty [2001a] , and vary two factors: query length and verbosity.
+
+This gives us four different combinations: Short-Keyword (SK, keyword title), Short-
+
+Verbose (SV, one sentence description), Long-Keyword (LK, keyword list), and Long-
+
+Verbose (LV, multiple sentences). The number of queries is usually larger than 50. To
+
+cover different types of documents, we construct our document collections by varying
+
+several factors, including: (1) the type of documents; (2) document length; (3) collec-
+
+tion size; and (4) collection homogeneity. Our choice of document collection has been
+
+decided to be news articles (AP), technical reports (DOE), government documents (FR),
+
+a combination of AP, DOE, and FR (ADF), the Web data used in TREC8 (Web), the ad
+
+hoc data used in TREC7 (Trec7), and the ad hoc data used in TREC8 (Trec8). Table VII
+
+shows some document set characteristics, including the number of queries used on the
+
+document set, the average number of relevant documents per query, the collection size,
+
+the number of documents, the vocabulary size, the mean document length, the stan-
+
+dard deviation of document length, and the mean length of relevant documents.
+
+The preprocessing of documents and queries is minimum, involving only Porter’s
+
+stemming. We intentionally did not remove stop words for two reasons: (1) A truly
+
+robust model should be able to discount the stop words automatically; (2) removing
+
+stop words would introduce at least one extra parameter (e.g., the number of stop
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:14
+
+H. Fang et al.
+
+Table VII. Document Set Characteristic
+
+
+
+
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+ADF
+
+
+
+Web
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+
+
+
+
+#qry
+
+
+
+142
+
+
+
+35
+
+
+
+42
+
+
+
+144
+
+
+
+50
+
+
+
+50
+
+
+
+50
+
+
+
+
+
+
+
+#rel/q
+
+
+
+103
+
+
+
+57
+
+
+
+33
+
+
+
+126
+
+
+
+46
+
+
+
+93
+
+
+
+95
+
+
+
+
+
+
+
+size
+
+
+
+491MB
+
+
+
+184MB
+
+
+
+469MB
+
+
+
+1GB
+
+
+
+2GB
+
+
+
+2GB
+
+
+
+2GB
+
+
+
+
+
+
+
+#doc(k)
+
+
+
+165K
+
+
+
+226K
+
+
+
+204K
+
+
+
+437K
+
+
+
+247K
+
+
+
+528K
+
+
+
+528K
+
+
+
+
+
+
+
+#voc(k)
+
+
+
+361K
+
+
+
+163K
+
+
+
+204K
+
+
+
+700K
+
+
+
+1968K
+
+
+
+908K
+
+
+
+908K
+
+
+
+
+
+
+
+mean(dl)
+
+
+
+454
+
+
+
+117
+
+
+
+1338
+
+
+
+372
+
+
+
+975
+
+
+
+477
+
+
+
+477
+
+
+
+
+
+
+
+dev(dl)
+
+
+
+239
+
+
+
+58
+
+
+
+5226
+
+
+
+1739
+
+
+
+2536
+
+
+
+789
+
+
+
+789
+
+
+
+
+
+
+
+mean(rdl)
+
+
+
+546
+
+
+
+136
+
+
+
+12466
+
+
+
+1515
+
+
+
+6596
+
+
+
+1127
+
+
+
+1325
+
+
+
+
+
+Table VIII. Optimal s (for average precision) in the Pivoted
+
+Normalization Method
+
+
+
+
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+ADF
+
+
+
+Web
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+
+
+
+
+lk
+
+
+
+0.2
+
+
+
+0.2
+
+
+
+0.05
+
+
+
+0.2
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+sk
+
+
+
+0.01
+
+
+
+0.2
+
+
+
+0.01
+
+
+
+0.05
+
+
+
+0.01
+
+
+
+0.05
+
+
+
+0.05
+
+
+
+
+
+
+
+lv
+
+
+
+0.3
+
+
+
+0.3
+
+
+
+0.1
+
+
+
+0.2
+
+
+
+0.2
+
+
+
+0.2
+
+
+
+0.2
+
+
+
+
+
+
+
+sv
+
+
+
+0.2
+
+
+
+0.3
+
+
+
+0.1
+
+
+
+0.2
+
+
+
+0.1
+
+
+
+0.1
+
+
+
+0.2
+
+
+
+
+
+words) into our experiments. On each test collection, for every retrieval method, we
+
+vary the retrieval parameter to cover a reasonably wide range of values. This allows
+
+us to see a complete picture of how sensitive each method is to its parameter. We use
+
+mean average precision as the main evaluation measure.
+
+3.2.2. Parameter Sensitivity. Based on the analysis in the previous subsection, we for-
+
+mulate the following hypotheses: (1) The pivoted normalization method is sensitive to
+
+the value of parameter s, where 0 &lt; s &lt; 1. The analysis of LNC2 suggests that the
+
+reasonable value for s should be generally smaller than 0.4 and the performance can be
+
+bad for a large s. (2) Okapi is more stable with the change of parameter b (0 &lt; b &lt; 1)
+
+compared with the pivoted normalization method. (3) The PL2 method is sensitive
+
+to the value of parameter c, where c &gt; 0. The constraint analysis suggests that the
+
+reasonable values for c should be generally equal to or larger than 1.
+
+We now discuss the experiment results from testing these hypotheses. First, let
+
+us consider the experiment result for the pivoted normalization method. As shown
+
+in Table VIII, the optimal value of s to maximize average precision is indeed very
+
+small in all cases. Moreover, Figure 3 shows how average precision is inﬂuenced by
+
+parameter value in the pivoted normalization method on the AP document set and
+
+long-keyword queries; the curves are similar for all other datasets. Clearly when s is
+
+large, which causes the method not to satisfy the LNC2 constraint, the performance
+
+becomes signiﬁcantly worse.
+
+Next, we experiment with the Okapi method. Assume k1 = 1.2, k3 = 1000 [Singhal
+
+2001] and b changes from 0.1 to 1.0. Okapi is indeed more stable than the pivoted
+
+normalization (shown in Figure 3). By checking the constraints, we have not found
+
+any particular bound for the parameters in Okapi, which may explain why Okapi is
+
+much less sensitive to the parameter setting than the pivoted normalization method,
+
+where the LNC2 constraint implies a concrete bound on parameter s.
+
+We now consider the experiment results for the PL2 method. Table IX shows that
+
+the optimal values of c are always larger than 1 in all cases. Moreover, as shown in
+
+Figure 4, when the values of c are smaller than 1, which would cause the retrieval
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:15
+
+Fig. 3.
+
+Performance comparison between Okapi and pivoted for AP-LK.
+
+Table IX. Optimal c (for average precision) in the PL2 Method
+
+
+
+
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+ADF
+
+
+
+Web
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+
+
+
+
+lk
+
+
+
+2
+
+
+
+2
+
+
+
+10
+
+
+
+2
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+sk
+
+
+
+5
+
+
+
+5
+
+
+
+5
+
+
+
+5
+
+
+
+15
+
+
+
+15
+
+
+
+15
+
+
+
+
+
+
+
+lv
+
+
+
+5
+
+
+
+2
+
+
+
+10
+
+
+
+2
+
+
+
+2
+
+
+
+5
+
+
+
+5
+
+
+
+
+
+
+
+sv
+
+
+
+5
+
+
+
+2
+
+
+
+10
+
+
+
+5
+
+
+
+50
+
+
+
+7
+
+
+
+5
+
+
+
+
+
+Fig. 4.
+
+Performance sensitivity of PL2 to parameter c for AP-LK.
+
+function to violate TDC, LNC2, and TF-LNC constraints, the performance indeed
+
+becomes signiﬁcantly worse.
+
+In summary, the constraints generally can provide an empirical bound for the
+
+parameters in retrieval formulas and the performance would tend to be poor when
+
+the parameter is out of the bound.
+
+3.2.3.
+
+Performance Comparison. We compare the performance of the four retrieval
+
+formulas through systematic experiments.
+
+Our goal is to see whether the experi-
+
+ment results are consistent with the analytical results based on formalized heuristics.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:16
+
+H. Fang et al.
+
+Table X. Comparison of Optimal Performance for Four Formulas
+
+
+
+
+
+
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+ADF
+
+
+
+Web
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+
+
+
+
+lk
+
+
+
+Piv
+
+
+
+0.39
+
+
+
+0.28
+
+
+
+0.33
+
+
+
+0.27
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+
+
+Dir
+
+
+
+0.38
+
+
+
+0.28
+
+
+
+0.32
+
+
+
+0.25
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+
+
+Okapi
+
+
+
+0.38
+
+
+
+0.27
+
+
+
+0.28
+
+
+
+0.33
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+Mod-Okapi
+
+
+
+0.39
+
+
+
+0.28
+
+
+
+0.28
+
+
+
+0.33
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+
+
+PL2
+
+
+
+0.38
+
+
+
+0.27
+
+
+
+0.27
+
+
+
+0.32
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+Mod-PL2
+
+
+
+0.38
+
+
+
+0.27
+
+
+
+0.27
+
+
+
+0.32
+
+
+
+—
+
+
+
+—
+
+
+
+—
+
+
+
+
+
+
+
+sk
+
+
+
+Piv
+
+
+
+0.23
+
+
+
+0.18
+
+
+
+0.19
+
+
+
+0.22
+
+
+
+0.29
+
+
+
+0.18
+
+
+
+0.24
+
+
+
+
+
+
+
+
+
+Dir
+
+
+
+0.22
+
+
+
+0.18
+
+
+
+0.18
+
+
+
+0.21
+
+
+
+0.30
+
+
+
+0.19
+
+
+
+0.26
+
+
+
+
+
+
+
+
+
+Okapi
+
+
+
+0.23
+
+
+
+0.19
+
+
+
+0.23
+
+
+
+0.19
+
+
+
+0.31
+
+
+
+0.19
+
+
+
+0.25
+
+
+
+
+
+
+
+Mod-Okapi
+
+
+
+0.23
+
+
+
+0.19
+
+
+
+0.23
+
+
+
+0.19
+
+
+
+0.31
+
+
+
+0.19
+
+
+
+0.25
+
+
+
+
+
+
+
+
+
+PL2
+
+
+
+0.22
+
+
+
+0.19
+
+
+
+0.22
+
+
+
+0.19
+
+
+
+0.31
+
+
+
+0.18
+
+
+
+0.26
+
+
+
+
+
+
+
+Mod-PL2
+
+
+
+0.22
+
+
+
+0.19
+
+
+
+0.22
+
+
+
+0.19
+
+
+
+0.31
+
+
+
+0.18
+
+
+
+0.26
+
+
+
+
+
+
+
+lv
+
+
+
+Piv
+
+
+
+0.29
+
+
+
+0.21
+
+
+
+0.23
+
+
+
+0.21
+
+
+
+0.22
+
+
+
+0.20
+
+
+
+0.23
+
+
+
+
+
+
+
+
+
+Dir
+
+
+
+0.29
+
+
+
+0.23
+
+
+
+0.24
+
+
+
+0.24
+
+
+
+0.28
+
+
+
+0.22
+
+
+
+0.26
+
+
+
+
+
+
+
+
+
+Okapi
+
+
+
+0.03
+
+
+
+0.07
+
+
+
+0.09
+
+
+
+0.06
+
+
+
+0.23
+
+
+
+0.08
+
+
+
+0.11
+
+
+
+
+
+
+
+Mod-Okapi
+
+
+
+0.30
+
+
+
+0.24
+
+
+
+0.25
+
+
+
+0.23
+
+
+
+0.28
+
+
+
+0.26
+
+
+
+0.25
+
+
+
+
+
+
+
+
+
+PL2
+
+
+
+0.24
+
+
+
+0.20
+
+
+
+0.09
+
+
+
+0.08
+
+
+
+0.09
+
+
+
+0.09
+
+
+
+0.13
+
+
+
+
+
+
+
+Mod-PL2
+
+
+
+0.29
+
+
+
+0.22
+
+
+
+0.25
+
+
+
+0.20
+
+
+
+0.27
+
+
+
+0.21
+
+
+
+0.25
+
+
+
+
+
+
+
+sv
+
+
+
+Piv
+
+
+
+0.19
+
+
+
+0.10
+
+
+
+0.14
+
+
+
+0.14
+
+
+
+0.21
+
+
+
+0.15
+
+
+
+0.20
+
+
+
+
+
+
+
+
+
+Dir
+
+
+
+0.20
+
+
+
+0.13
+
+
+
+0.16
+
+
+
+0.16
+
+
+
+0.27
+
+
+
+0.18
+
+
+
+0.23
+
+
+
+
+
+
+
+
+
+Okapi
+
+
+
+0.08
+
+
+
+0.08
+
+
+
+0.08
+
+
+
+0.09
+
+
+
+0.21
+
+
+
+0.09
+
+
+
+0.10
+
+
+
+
+
+
+
+Mod-Okapi
+
+
+
+0.19
+
+
+
+0.12
+
+
+
+0.16
+
+
+
+0.14
+
+
+
+0.25
+
+
+
+0.16
+
+
+
+0.22
+
+
+
+
+
+
+
+
+
+PL2
+
+
+
+0.16
+
+
+
+0.09
+
+
+
+0.07
+
+
+
+0.10
+
+
+
+0.11
+
+
+
+0.08
+
+
+
+0.10
+
+
+
+
+
+
+
+Mod-PL2
+
+
+
+0.19
+
+
+
+0.10
+
+
+
+0.18
+
+
+
+0.15
+
+
+
+0.25
+
+
+
+0.15
+
+
+
+0.21
+
+
+
+
+
+We form the following hypotheses based on the constraint analysis: (1) For verbose
+
+queries, both Okapi and PL2 would perform worse than pivoted normalization and
+
+Dirichlet prior, due to violation of more constraints in these cases. (2) The modiﬁed
+
+Okapi and modiﬁed PL2, which are derived from heuristically modifying the original
+
+functions to make them satisfy more constraints in the case of verbose queries, would
+
+perform better than their respective original functions.
+
+In order to test these hypotheses, we run experiments over seven collections and
+
+four query sets to test all these methods, including pivoted normalization, Dirichlet
+
+prior, Okapi, modiﬁed Okapi, PL2, and modiﬁed PL2.
+
+We summarize the optimal
+
+performance for each formula in Table X.
+
+We see that, for keyword queries, the optimal performances of all the four retrieval
+
+formulas, representing four different types of retrieval models, are comparable, con-
+
+ﬁrming that these state-of-the-art retrieval models are indeed all effective. However,
+
+for verbose queries (LV and SV), as we hypothesized, both Okapi and PL2 are sub-
+
+stantially worse than pivoted normalization and Dirichlet prior. The fact that both
+
+modiﬁed Okapi (Mod-Okapi) and modiﬁed PL2 (Mod-PL2) are generally much better
+
+than their corresponding original functions further shows that the cause of the poor
+
+performance on verbose queries for these two functions is indeed due to the violation
+
+of constraints. The improvements of Mod-Okapi over Okapi and Mod-PL2 over PL2
+
+are both signiﬁcant (the p-values of the Wilcoxon signed rank test are all below 0.013).
+
+Speciﬁcally, the original Okapi violates many constraints due to possible negative
+
+IDF scores in the case of verbose queries, which explains the poor performance of
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:17
+
+Fig. 5.
+
+Performance comparison between modiﬁed Okapi, Okapi, and pivoted for AP-SV.
+
+the original Okapi. Mod-Okapi was obtained by replacing the IDF in Okapi with the
+
+IDF from pivoted normalization so as to satisfy more constraints (indeed, after this
+
+modiﬁcation, Mod-Okapi satisﬁes all our constraints), and it indeed improves over the
+
+original Okapi substantially for verbose queries. In Figure 5, we compare Mod-Okapi
+
+with the original Okapi (together with pivoted normalization) for a range of parameter
+
+values, where we see that Mod-Okapi is consistently better than the original Okapi for
+
+the entire range of parameter b, and gives performance comparable to that of pivoted
+
+normalization for verbose queries.
+
+The case of PL2 is similar. The original PL2 violates many constraints in the case
+
+of very small term discrimination values (i.e., verbose queries), which explains its poor
+
+performance on verbose queries.
+
+After modifying the PL2 by excluding the terms
+
+whose term discrimination values are smaller than 1.0, the performance on verbose
+
+queries is improved consistently and substantially as can be seen by comparing PL2
+
+and Mod-PL2. The performance remains the same for keyword queries since presum-
+
+ably no term in the keyword queries has a term discrimination value (i.e., λt) smaller
+
+than 1. Note that although removing the stopwords may achieve a similar effect and
+
+make the original PL2 perform well for both keyword and verbose queries, we believe
+
+that a robust retrieval function should be able to discount the stop words automat-
+
+ically, thus this result reveals a weakness of PL2 which can be corrected through a
+
+heuristic modiﬁcation (i.e., Mod-PL2).
+
+Overall, both Table X and Figure 5 show that satisfying more constraints appears to
+
+be correlated with better performance. Therefore, the proposed constraints can provide
+
+a plausible explanation for the performance difference in various retrieval models,
+
+allow us to diagnose the weaknesses of a retrieval function, and use the insights gained
+
+from the analysis to further improve a retrieval function.
+
+4. DIAGNOSTIC EVALUATION WITH COLLECTION PERTURBATION
+
+Constraints analysis described in the previous sections provides a principled way to
+
+examine the implementations of retrieval heuristics analytically. Unfortunately, if two
+
+analyzed retrieval functions satisfy the same set of constraints, constraint analysis
+
+would not be able to help us judge which is better. Moreover, analytical checking of a
+
+constraint can sometimes be mathematically challenging, thus we may not always be
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:18
+
+H. Fang et al.
+
+Table XI. Medical Diagnosis Analogy
+
+
+
+
+
+Medical Domain
+
+
+
+IR Domain
+
+
+
+
+
+
+
+patients
+
+
+
+retrieval functions
+
+
+
+
+
+
+
+illness
+
+
+
+non-optimal performance
+
+
+
+
+
+
+
+diseases
+
+
+
+problems of heuristic implementation,
+
+
+
+
+
+
+
+causes of non-optimal performance
+
+
+
+
+
+
+
+medical records
+
+
+
+existing ﬁndings in IR
+
+
+
+
+
+
+
+symptoms
+
+
+
+empirical results
+
+
+
+
+
+
+
+medical instruments
+
+
+
+relevance-preserved collection perturbations
+
+
+
+
+
+
+
+medical tests
+
+
+
+tests for retrieval models
+
+
+
+
+
+
+
+treatments for disease
+
+
+
+better implementations of heuristics,
+
+
+
+
+
+
+
+modiﬁcation for performance improvement
+
+
+
+
+
+able to derive an analytical result. In all these cases, we will still need to rely on test
+
+collections to experimentally compare retrieval functions.
+
+The traditional Cranﬁeld evaluation methodology allows us to easily compare two
+
+retrieval functions based on their overall retrieval accuracy.
+
+However, when one
+
+retrieval function has a lower retrieval accuracy than another, such an evaluation
+
+method cannot help us understand why. An interesting question is, thus, whether we
+
+can design some tests to experimentally diagnose the strengths and weaknesses of re-
+
+trieval functions. For example, can we design a test to examine whether the inferior
+
+performance of a retrieval function is due to an inferior length normalization compo-
+
+nent when compared with another retrieval function?
+
+In this section, we propose a general methodology to compare retrieval functions
+
+experimentally to understand how well they implement speciﬁc retrieval heuristics.
+
+Our main idea is to perturb a standard retrieval test collection to gradually make it
+
+approach various “extreme conditions” (e.g., making all the documents have an equal
+
+length or amplifying the length differences of documents), and examine how a retrieval
+
+function responds to such perturbations. We can then compare the performance pat-
+
+terns exhibited by different retrieval functions under such perturbations. The pertur-
+
+bations will be designed in such a way that a certain aspect of difference in two re-
+
+trieval functions (e.g., their effectiveness in handling length normalization) would be
+
+ampliﬁed under a particular extreme condition (e.g., when the variances of document
+
+lengths are made artiﬁcially very high).
+
+Our idea is essentially similar to medical diagnosis as shown in Table XI. Speciﬁ-
+
+cally, we will propose a set of operators for perturbing existing evaluation collections
+
+while preserving the relevance status of all documents. Such perturbations make it
+
+possible to enlarge the empirical performance differences among retrieval functions
+
+and make it easier to observe the “symptoms” of existing retrieval functions (i.e., the
+
+problems of current heuristic implementations). We will further design various diag-
+
+nostic tests targeting at testing speciﬁc aspects of a retrieval function. These diagnos-
+
+tic tests are thus similar to medical instruments (e.g., a medical thermometer) in that
+
+they allow us to measure speciﬁc symptoms of a retrieval function. Through analyzing
+
+the results from various tests, we can then diagnose the relative strengths and weak-
+
+nesses of a retrieval function. We can then “treat” the retrieval function by ﬁxing its
+
+weakness through better implementation of retrieval heuristics.
+
+We now describe this diagnosis methodology in more detail.
+
+4.1. Collection Perturbations
+
+One reason why existing evaluation methodology is not informative enough is that a
+
+test collection usually has a mixed set of documents with various characteristics. Our
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:19
+
+Table XII. Basic Perturbation Operators
+
+
+
+
+
+Name
+
+
+
+Semantic
+
+
+
+Operator
+
+
+
+
+
+
+
+term addition
+
+
+
+Add K occurrences of term t to document D
+
+
+
+aT(t, D, K)
+
+
+
+
+
+
+
+term deletion
+
+
+
+Delete K occurrences of term t from document D
+
+
+
+dT(t, D, K)
+
+
+
+
+
+
+
+document addition
+
+
+
+Add document D to the collection K times
+
+
+
+aD(D, K)
+
+
+
+
+
+
+
+document deletion
+
+
+
+Delete document D form the collection
+
+
+
+dD(D)
+
+
+
+
+
+
+
+document concatenation
+
+
+
+Concatenate document D1 with D2 K times,
+
+
+
+cD(D1, D2, K)
+
+
+
+
+
+idea to perform diagnosis evaluation is thus to perturb an existing evaluation collec-
+
+tion to control or vary some characteristics. This would generate a series of perturbed
+
+collections which can then be used to test a retrieval function. We hope the perturbed
+
+collections would allow us to see more meaningful differences between retrieval func-
+
+tions. With our medical domain analogy, these perturbations serve as our instruments
+
+to perform diagnostic tests for retrieval models.
+
+We ﬁrst introduce some new notations. D is the set of all the documents in the
+
+test collection, Dr is the set of relevant documents, and Dn is the set of nonrelevant
+
+documents. Vn is a set of “noise terms,” that is, terms that are not relevant to any
+
+query; for example, they can be meaningless terms outside our vocabulary. In other
+
+words, ∀tn ∈ Vn, if we add tn to D, the relevance status of D would not be changed.
+
+As in the previous sections, we assume that both queries and documents use “bag of
+
+terms” representation.
+
+A standard evaluation collection includes a document collection, a set of queries,
+
+and a set of relevance judgments indicating which documents are relevant to which
+
+queries. To leverage the relevance judgments in the existing test collections, we keep
+
+the topics and perturb only the documents, which means to perturb term statistics in
+
+documents (e.g., term occurrences), document statistics (e.g., document length), and
+
+collection statistics (e.g., number of documents). We deﬁne ﬁve basic operators for
+
+collection perturbations, including term addition, term deletion, document addition,
+
+document deletion, and document concatenation; they are summarized in Table XII.
+
+Every operator has a parameter K to control the degree of perturbation. K can either
+
+be the same for all documents or vary according to term/document statistics, such as
+
+the occurrences of a term. These basic operators can be combined to perform more
+
+sophisticated perturbations.
+
+Since it is time consuming to recreate relevance judgments, we want to preserve the
+
+relevance status of every document after any perturbation. Following the deﬁnition of
+
+relevance used in TREC, we assume that any relevance evidence in a document makes
+
+the document relevant.
+
+Note that not all the proposed basic operators are guaranteed to maintain the rel-
+
+evance status of a document. For example, deleting query terms from a relevant doc-
+
+ument could change the document to nonrelevant. Thus, what we need is relevance-
+
+preserving perturbations. A relevance-preserving perturbation is a perturbation where
+
+we have high conﬁdence that the relevance status of each document after the pertur-
+
+bation remains the same as that of the corresponding original document.
+
+We now deﬁne several relevance-preserving perturbations based on the proposed
+
+basic operators (summarized in Table XIII). All these perturbations are intuitive. For
+
+example, a relevant document remains relevant if we add more query terms. Also, un-
+
+der the assumption that a document is relevant as long as part of it is relevant, adding
+
+noisy terms to any document would not change its relevance status. Furthermore,
+
+the relevance status of a document remains the same if we concatenate it with itself
+
+several times. Similarly, concatenating two relevant documents or two nonrelevant
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:20
+
+H. Fang et al.
+
+Table XIII. Relevance-Preserving Perturbations
+
+
+
+
+
+Name
+
+
+
+Semantic
+
+
+
+Perturbation
+
+
+
+
+
+
+
+relevance
+
+
+
+Add a query term to a
+
+
+
+aT(t, D, K), where D ∈ Dr, t ∈ Q
+
+
+
+
+
+addition
+
+
+
+a relevant document
+
+
+
+
+
+
+
+
+
+noise
+
+
+
+Add a noisy term
+
+
+
+aT(t, D, K), where D ∈ D, t ∈ Vn
+
+
+
+
+
+addition
+
+
+
+to a document
+
+
+
+
+
+
+
+
+
+internal
+
+
+
+Add a term to a document
+
+
+
+aT(t, D, K), where D ∈ D, t ∈ D
+
+
+
+
+
+term growth
+
+
+
+that originally contains the term
+
+
+
+
+
+
+
+
+
+document
+
+
+
+Concatenate D with
+
+
+
+cD(D, D, K), where D ∈ D
+
+
+
+
+
+scaling
+
+
+
+itself K times
+
+
+
+
+
+
+
+
+
+relevant doc.
+
+
+
+Concatenate two relevant
+
+
+
+cD(D1, D2, K), where D1, D2 ∈ Dr
+
+
+
+
+
+concatenation
+
+
+
+documents K times
+
+
+
+
+
+
+
+
+
+non-relevant doc.
+
+
+
+Concatenate two non-relevant
+
+
+
+cD(D1, D2, K), where D1, D2 ∈ Dn
+
+
+
+
+
+concatenation
+
+
+
+documents K times
+
+
+
+
+
+
+
+
+
+noise
+
+
+
+Delete a term from
+
+
+
+dT(t, D, K), where D ∈ Dn, t ∈ D
+
+
+
+
+
+deletion
+
+
+
+a non-relevant document
+
+
+
+
+
+
+
+
+
+document
+
+
+
+Add a document
+
+
+
+aD(D, K)
+
+
+
+
+
+addition
+
+
+
+to the collection
+
+
+
+
+
+
+
+
+
+document
+
+
+
+Delete a document
+
+
+
+dT(D), where D ∈ D.
+
+
+
+
+
+deletion
+
+
+
+from the collection
+
+
+
+
+
+
+
+documents would not affect the relevance status either. Note that in document con-
+
+catenation, the changes of term occurrences are proportional to the document length.
+
+4.2. Diagnostic Tests for IR Models
+
+We now discuss how to use the proposed relevance-preserving perturbations to design
+
+diagnostic tests for retrieval models.
+
+4.2.1. Common Procedure. In general, in order to design diagnostic tests, we would
+
+ﬁrst identify the aspects of retrieval functions that we want to test, that is, some spe-
+
+ciﬁc desirable properties that we believe a reasonable retrieval function should have.
+
+This reasoning is similar to the deﬁnition of the formalized retrieval constraints given
+
+in the previous sections. However, instead of using those binary constraints to com-
+
+pare retrieval functions analytically, here we design diagnostic tests to examine these
+
+properties experimentally using test collections.
+
+After we identify the desirable properties to be diagnosed, we need to further con-
+
+nect these properties with our relevance-preserving perturbations and select appropri-
+
+ate perturbation operators. Once the perturbations are chosen for a particular prop-
+
+erty, we could use the perturbation parameter of the operators to control the degree of
+
+perturbation. As we gradually increase the degree of perturbation, we would record
+
+the empirical performance of retrieval functions for each perturbation parameter value
+
+on the corresponding perturbed collections, and stop perturbing when we get enough
+
+information (e.g., when we can observe clear performance differences among retrieval
+
+functions). This procedure allows us to obtain a performance curve like the one shown
+
+in Figure 6; it gives us a picture of how the performance changes as we impose more
+
+dramatic perturbations. In such a ﬁgure, the x-axis is always the value of perturbation
+
+parameter, and y-axis is a standard retrieval performance measure, which is MAP in
+
+our experiments.
+
+Note that the perturbation parameter K could be set in many different ways. Here
+
+we only consider two possibilities: (1) constant growth, where K is the same for all
+
+terms and documents; (2)linear growth, where K is proportional to some term statis-
+
+tics, such as c(t, D), or document statistics, such as |D|. It is often hard to predeﬁne
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:21
+
+
+
+Fig. 6.
+
+Example curve for the results of a diagnostic test.
+
+the range of perturbations. In this work, we increase K and stop when we observe
+
+clear performance differences among retrieval functions or when K reaches a sufﬁ-
+
+ciently large value. We leave the problem of ﬁnding a more principled way to set the
+
+parameter range as a future work. There are also different ways to select documents
+
+for perturbation: (1)general collection perturbation, where all the documents in the
+
+collection would be perturbed; (2)subcollection perturbation, where only a subset of a
+
+collection is perturbed. Note that we need to make sure that this choice is consistent
+
+with the requirements of the relevance-preserving perturbations.
+
+Intuitively, the perturbation results can be very useful to understand the behavior
+
+of a retrieval function. For example, a ﬂat curve would mean that the function being
+
+tested is completely insensitive to such perturbation, while a dropping curve would
+
+mean that the function suffered from the perturbation. To interpret the results, we
+
+need to design measures to quantitatively evaluate perturbation results.
+
+In general, measures can be deﬁned based on the area under the curve or some
+
+extreme performance values (e.g., initial and end values or maximum and minimum
+
+values). Naturally, which measure is the best would often depend on the property to
+
+be tested. In our study, we are most interested in how the performance degrades or
+
+increases as we increase the amount of perturbation. For this purpose, we deﬁne the
+
+following Performance Ratio (PR) measure.
+
+PerformanceRatio =
+
+area
+
+
+
+under
+
+
+
+curve
+
+
+
+area
+
+
+
+under
+
+
+
+line
+
+
+
+through
+
+
+
+init
+
+
+
+point
+
+The PR value of the curve shown in Figure 6 can be computed by dividing the area
+
+of shaded part A by the area of rectangle B. Intuitively, the PR value tells us the
+
+average amount of degradation or gain in performance after a perturbation. A high
+
+PR value indicates more gain in performance while a low PR value indicates more
+
+loss. The desirable PR value would depend on the speciﬁc perturbation, though in
+
+most of our experiments, a high PR value is better and suggests a more robust retrieval
+
+function. Note that the PR value can be larger than 1, which means that the retrieval
+
+performance increases as we increase the amount of perturbation.
+
+We now present three groups of diagnostic tests designed by following this common
+
+procedure.
+
+4.2.2. Length Variation Sensitivity Tests. Document length normalization is an important
+
+component in virtually all effective retrieval functions. To help understand a func-
+
+tion’s length normalization mechanism, we design tests to examine the sensitivity of
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:22
+
+H. Fang et al.
+
+a retrieval function to the length variance in the document collection. We use docu-
+
+ment scaling perturbation, thatis, cD(D, D, K), to perform the tests, because it changes
+
+the document length of each document, yet maintains the relative ratio of term occur-
+
+rences. We design the following three different tests to examine the different aspects
+
+of the length variation. These three tests differ in how to set the value of perturbation
+
+parameter, that is, K.
+
+Length variance reduction test (LV1). This test is to use the document scaling per-
+
+turbation to make all the documents have similar or identical length, and it would
+
+thus reduce the variance of document lengths. The test is deﬁned as follows.
+
+For every D ∈ D, perform cD(D, D, K)
+
+with K = (1−β)×|d|+β×1000000
+
+
+
+|d|
+
+and 0 ≤ β ≤ 1.
+
+β is a parameter to control the degree of perturbation. When β is set to 0, all the
+
+documents have the original length. When β is set to 1, all the documents have the
+
+same length (i.e., number of terms in the documents is 1,000,000).
+
+Since more perturbation would deprive the retrieval function of any beneﬁt of length
+
+normalization, the test result can indicate how effective the length normalization
+
+mechanism of a function is. A lower PR value indicates that the function could gain
+
+more through length normalization.
+
+Length variance ampliﬁcation test (LV2). This test is to amplify the differences in
+
+document lengths and make distribution of document lengths skewer. The test is de-
+
+ﬁned as follows.
+
+For every D ∈ D, perform cD(D, D, K),
+
+where K = |D| × β.
+
+K is proportional to the original document length, which means that longer docu-
+
+ments will grow much more rapidly compared with shorter ones. β is used to control
+
+the degree of perturbation. A larger β leads to skewer document length distribution.
+
+We expect a robust function to have a high PR value.
+
+Length scaling test (LV3). This test is to concatenate all the documents with them-
+
+selves K times, where K is same for all the documents. In this way, the length variance
+
+would change but the relative length ratio remains the same.
+
+The test has the same intuition as the LNC2 constraint proposed in previous sec-
+
+tions.
+
+Thus, if a retrieval function achieves a higher PR value, it means that the
+
+function does a better job to avoid over-penalizing long documents.
+
+4.2.3. Term Noise Resistance Tests. A robust retrieval function should also be resistant
+
+to term noise, that is., the terms that do not contribute to the relevance of a document
+
+(∀tn ∈ Vn). We assume that a document is relevant if it contains some relevant evidence,
+
+so a reasonable retrieval function is expected to be resistant to the addition of term
+
+noise. We design the following test to examine the term noise resistance of a retrieval
+
+function.
+
+Noise addition test (TN). This test is to add noise (i.e., nonrelevant terms) to docu-
+
+ments. We use the noise addition perturbation operator as follows.
+
+For every D ∈ D, perform aT(tn, D, K)
+
+where tn ∈ Vn and K is a parameter.
+
+There are two variations: (1) constant growth: K is a constant, that is, we add the
+
+same number of noisy terms to all documents; and (2) linear growth: K = β × |D|,
+
+β &gt; 1, that is, the length of a perturbed document is linear to the original document
+
+length. The test has the same intuition as the LNC1 constraint, because both of them
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:23
+
+consider the situations when more nonquery terms are added to documents. Thus, a
+
+high PR value indicates that the function is reasonable in penalizing long documents.
+
+An alternative way to examine noise resistance would be to design a test to remove
+
+noise from documents. Unfortunately, this is not easy, since nonquery terms may still
+
+contribute to the relevance of a document, and removing many nonquery terms from
+
+relevant documents may cause a relevant document to be nonrelevant. We leave fur-
+
+ther exploration of this option as part of our future work.
+
+4.2.4. TF-LN Balance Tests. TF (term frequency) and LN (length normalization) are
+
+two important heuristics that are often coupled together in retrieval models due to the
+
+need for TF normalization. We design three tests to examine the ability of a retrieval
+
+function to balance TF and LN. The main idea is to increase the occurrences of the
+
+query terms that are already in the documents. This has a mixed effect on the score of
+
+a document: the score may be increased due to the increase of TF values, but it may
+
+also be decreased due to the increased length of the document. Thus our tests would
+
+reveal the overall inﬂuence of such perturbation on the retrieval performance. The
+
+following three tests differ in how to pick the query terms whose occurrences are to be
+
+increased.
+
+Single query term growth test (TG1). We increase the term occurrence for only one
+
+random query term, and use the internal term growth perturbation as follows.
+
+t is a random query term, for every D ∈ D
+
+if t ∈ D, perform aT(t, D, K).
+
+This test is designed to increase term occurrence of one query term so that a query
+
+term will dominate in a document. A retrieval function with a higher PR value for this
+
+test is more robust against such dominance and favors documents containing more
+
+distinct query terms.
+
+Majority query term growth test (TG2). We can increase the term occurrences for all
+
+but one random query term. This test can be deﬁned as follows.
+
+t is a random query term, for every D ∈ D
+
+for every t′ ∈ Q − {t}, if t′ ∈ D, perform aT(t′, D, K).
+
+The test is designed to increase term occurrences for majority query terms so that
+
+only one query term will be less dominant in a document. Obviously this test is only
+
+meaningful for queries with at least two terms, and in the case when there are ex-
+
+actly two terms, it is the same as the previous test. A higher PR value indicates that
+
+the function is more robust against such majority dominance and favors documents
+
+containing more of the query terms (i.e., larger sum of all query term occurrences).
+
+All query term growth test (TG3). We perform the internal term growth perturbation
+
+for all query terms.
+
+For every D ∈ D
+
+for every t ∈ Q, if t ∈ D, perform aT(t, D, K).
+
+This test is to examine whether the increase of TF can compensate for the score
+
+loss caused by the length penalization. A retrieval function with higher PR value can
+
+balance the TF and LN parts better.
+
+The proposed tests and their interpretations are summarized in Table XIV.
+
+5. DIAGNOSTIC TESTS ON REPRESENTATIVE RETRIEVAL FUNCTIONS
+
+In this section, we perform the proposed diagnostic tests on the same four state-of-the-
+
+art retrieval functions deﬁned earlier in Eqs. (1)–(4), that is, pivoted normalization,
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:24
+
+H. Fang et al.
+
+Table XIV. Tests and Corresponding Interpretations
+
+
+
+
+
+Test
+
+
+
+Interpretation of higher value in the results
+
+
+
+Label
+
+
+
+
+
+
+
+length variance reduction
+
+
+
+have less gain on length normalization.
+
+
+
+LV1
+
+
+
+
+
+length variance ampliﬁcation
+
+
+
+be more robust to larger document variance.
+
+
+
+LV2
+
+
+
+
+
+length scaling
+
+
+
+better at avoiding over-penalizing long documents.
+
+
+
+LV3
+
+
+
+
+
+term noise addition
+
+
+
+penalize long documents more appropriately.
+
+
+
+TN
+
+
+
+
+
+single query term growth
+
+
+
+favor documents with more distinct query terms.
+
+
+
+TG1
+
+
+
+
+
+majority query term growth
+
+
+
+favor documents with more query terms.
+
+
+
+TG2
+
+
+
+
+
+all query term growth
+
+
+
+balance TF and LN more appropriately.
+
+
+
+TG3
+
+
+
+
+
+Table XV. Optimal Performance of Representative Functions
+
+(short keyword queries)
+
+
+
+
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+Web
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+
+
+
+
+
+
+Pivoted
+
+
+
+0.176
+
+
+
+0.244
+
+
+
+0.288
+
+
+
+0.227
+
+
+
+0.179
+
+
+
+0.218
+
+
+
+
+
+Okapi
+
+
+
+0.186
+
+
+
+0.251
+
+
+
+0.310
+
+
+
+0.226
+
+
+
+0.185
+
+
+
+0.230
+
+
+
+
+
+Dirichlet
+
+
+
+0.186
+
+
+
+0.257
+
+
+
+0.302
+
+
+
+0.224
+
+
+
+0.180
+
+
+
+0.202
+
+
+
+
+
+PL2
+
+
+
+0.183
+
+
+
+0.257
+
+
+
+0.314
+
+
+
+0.222
+
+
+
+0.185
+
+
+
+0.216
+
+
+
+
+
+Table XVI. Length Variation Robustness Test Results
+
+
+
+
+
+Test
+
+
+
+Pivoted
+
+
+
+Okapi
+
+
+
+Dirichlet
+
+
+
+PL2
+
+
+
+Desirable Value and Interpretation
+
+
+
+
+
+
+
+LV1
+
+
+
+0.914
+
+
+
+0.845
+
+
+
+0.883
+
+
+
+0.864
+
+
+
+Low → better implementation of LN
+
+
+
+
+
+
+
+LV2
+
+
+
+0.829
+
+
+
+0.822
+
+
+
+0.811
+
+
+
+0.739
+
+
+
+High → more robust in a collection
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+with higher length variance
+
+
+
+
+
+
+
+LV3
+
+
+
+0.850
+
+
+
+0.927
+
+
+
+0.826
+
+
+
+0.928
+
+
+
+High → better at avoiding
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+over-penalizing long documents
+
+
+
+
+
+Okapi, Dirichlet prior, and PL2. The tests are conducted on the six datasets used in
+
+Section 3. With the traditional Cranﬁeld evaluation methodology, the optimal perfor-
+
+mances of the four functions are similar on these datasets as shown in Table XV. Thus
+
+these MAP values alone cannot help us understand the relative strengths and weak-
+
+nesses of these four functions, making it hard to gain insights to further improve any
+
+of them. We will show that the diagnostic tests are able to help us better understand
+
+their underlying differences, diagnose their weaknesses, and gain insights about how
+
+to improve their retrieval performance.
+
+5.1. Length Variation Sensitivity Tests
+
+Table XVI shows the results of three length variation sensitivity tests. Every value is
+
+the average PR (i.e., performance ratio) on the six datasets. For the variance reduction
+
+test (i.e., LV1), pivoted has the highest PR value, which means that it is least sensitive
+
+to this test. On the other hand, Okapi has the lowest PR value, which means that
+
+it loses the most when we “turned off” its length normalization part, indicating that
+
+the length normalization part of Okapi is implemented more reasonably than other
+
+functions.
+
+For the length variance ampliﬁcation test (i.e., LV2), pivoted has the highest PR
+
+value, which means that it is the most robust one if we increase the length variances
+
+in the collection. Thus, it means that the pivoted normalization function might be the
+
+best choice if the document lengths vary a lot in the collection.
+
+For the length scaling test (i.e., LV3), both Okapi and PL2 have the highest PR val-
+
+ues, indicating that they are the most robust retrieval functions for this test. Since
+
+this test has the same intuition as the LNC2 constraint, it can be regarded as a test to
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:25
+
+Table XVII. Additional Length Scaling Test Results
+
+
+
+
+
+
+
+Pivoted
+
+
+
+Okapi
+
+
+
+Dirichlet
+
+
+
+PL2
+
+
+
+Desirable value and interpretation
+
+
+
+
+
+
+
+LV3-nonrel
+
+
+
+0.11
+
+
+
+0.20
+
+
+
+0.89
+
+
+
+0.61
+
+
+
+Low → better at avoiding
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+over-penalizing long documents
+
+
+
+
+
+
+
+LV3-rel
+
+
+
+0.17
+
+
+
+2.09
+
+
+
+1.19
+
+
+
+1.99
+
+
+
+High → balance TF and LN better
+
+
+
+
+
+Fig. 7.
+
+Additional length scaling tests:LV3-nonrel(Left), LV3-rel(Right).
+
+examine how well a retrieval function avoids over-penalizing long documents. Thus,
+
+the lower PR values of Dirichlet and pivoted indicate that these two functions might
+
+not do a good job at avoiding over-penalizing long documents. Although this result is
+
+similar to what we have already obtained through analytical checking of the LNC2
+
+constraint, these tests can be applicable to any retrieval function to perform such
+
+diagnostic analysis, whereas for some retrieval functions, we may not easily obtain
+
+analytical conclusions regarding whether they satisfy LNC2.
+
+To further verify our results of LV3, we design and perform two additional length
+
+scaling tests. Instead of scaling all documents, we conduct two tests where we scale
+
+only nonrelevant documents (i.e., LV3-nonrel) and only relevant documents (i.e., LV3-
+
+rel), respectively. The results are shown in Table XVII and Figure 7. In the LV3-
+
+nonrel test, all the nonrelevant documents become longer. We would expect that a
+
+retrieval function that penalizes long documents more harshly to have a higher PR
+
+value. Dirichlet has the highest PR value, followed by PL2, indicating that they both
+
+tend to penalize long documents more harshly than Okapi or pivoted normalization.
+
+In the LV3-rel test, both term frequency and document length grow in all relevant
+
+documents. We expect that a retrieval function that balances TF and LN well would
+
+get a higher PR value. The lowest PR value of pivoted indicates that it does not balance
+
+the growth of TF and LN as well as the other functions, whereas Okapi and PL2 seem
+
+to be the best in balancing TF and LN.
+
+5.2. Term Noise Resistance Tests
+
+Table XVIII and Figure 8 show the results of term noise resistance tests where noisy
+
+terms are added to all the documents. The lowest PR value of Dirichlet indicates that
+
+Dirichlet does not penalize long documents as appropriately as others.
+
+To further understand the results, we design one additional test (i.e., TN-nonrel).
+
+Instead of performing the test on all the documents, we perform it only on nonrele-
+
+vant documents. Thus, when we do more perturbation, the length of a nonrelevant
+
+document would become longer, and we expect that a retrieval function penalizing
+
+long documents more harshly would perform much better when we do more perturba-
+
+tion. Figure 9 shows the results for TREC7. The curve for other datasets are similar.
+
+The performance of Dirichlet grows more quickly, indicating that it penalizes the long
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:26
+
+H. Fang et al.
+
+Table XVIII. Noise Resistant Test Results
+
+
+
+
+
+
+
+Pivoted
+
+
+
+Okapi
+
+
+
+Dirichlet
+
+
+
+PL2
+
+
+
+Desirable value and interpretation
+
+
+
+
+
+
+
+TN (constant)
+
+
+
+0.940
+
+
+
+0.932
+
+
+
+0.896
+
+
+
+0.882
+
+
+
+High → penalize long documents better
+
+
+
+
+
+
+
+TN (linear)
+
+
+
+1
+
+
+
+1
+
+
+
+0.826
+
+
+
+1
+
+
+
+High → penalize long documents better
+
+
+
+
+
+
+
+
+
+TN-nonrel
+
+
+
+1.19
+
+
+
+1.26
+
+
+
+2.94
+
+
+
+1.79
+
+
+
+Low → better at avoiding
+
+
+
+
+
+(constant)
+
+
+
+
+
+
+
+
+
+
+
+over-penalizing long documents
+
+
+
+
+
+
+
+TN-nonrel
+
+
+
+1.49
+
+
+
+1.66
+
+
+
+4.03
+
+
+
+2.67
+
+
+
+Low → better at avoiding
+
+
+
+
+
+(linear)
+
+
+
+
+
+
+
+
+
+
+
+over-penalizing long documents
+
+
+
+
+
+Fig. 8.
+
+Term noise addition tests (TN).
+
+Fig. 9.
+
+Additional term noise tests (TN-nonrel).
+
+documents more harshly, which is consistent with our ﬁndings in the nonrelevant doc-
+
+ument length scaling test (i.e., LV3-nonrel).
+
+5.3. TF-LN Balance Tests
+
+The results of TF-LN balance tests are summarized in Table XIX. It is clear that PL2
+
+has the highest scores for most of the tests, indicating that in general, PL2 can balance
+
+TF and LN better than the other three functions.
+
+However, there appears to be no clear pattern among pivoted normalization, Okapi,
+
+and Dirichlet prior. After looking into the trends of performance (as we make more
+
+perturbations) for these tests, we found that Dirichlet prior behaves differently from
+
+the other three functions. In Figure 10, we show the trend curves on TREC 7 for
+
+the single term growth and majority term growth tests. Here we see that while in
+
+general the performances of all the methods drop as we increase K (i.e., the amount
+
+of perturbation), the performance of Dirichlet prior drops much more quickly after K
+
+becomes larger than 1,000.
+
+There are two possible causes of this sudden drop: either some relevant documents
+
+ended up being penalized or some nonrelevant documents ended up being rewarded
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:27
+
+Table XIX. TF-LN Balance Test Results (Larger value is better)
+
+
+
+
+
+
+
+Pivoted
+
+
+
+Okapi
+
+
+
+Dirichlet
+
+
+
+PL2
+
+
+
+
+
+
+
+single
+
+
+
+constant
+
+
+
+0.840
+
+
+
+0.854
+
+
+
+0.85
+
+
+
+0.864
+
+
+
+
+
+(TG1)
+
+
+
+linear
+
+
+
+0.827
+
+
+
+0.881
+
+
+
+0.875
+
+
+
+0.932
+
+
+
+
+
+
+
+majority
+
+
+
+constant
+
+
+
+0.802
+
+
+
+0.798
+
+
+
+0.823
+
+
+
+0.838
+
+
+
+
+
+(TG2)
+
+
+
+linear
+
+
+
+0.775
+
+
+
+0.773
+
+
+
+0.817
+
+
+
+0.914
+
+
+
+
+
+
+
+all
+
+
+
+constant
+
+
+
+0.730
+
+
+
+0.721
+
+
+
+0.694
+
+
+
+0.703
+
+
+
+
+
+(TG3)
+
+
+
+linear
+
+
+
+0.793
+
+
+
+0.897
+
+
+
+0.870
+
+
+
+0.932
+
+
+
+
+
+Fig. 10.
+
+Single and majority term growth tests.
+
+Fig. 11.
+
+Single and majority term growth + Equal Len.
+
+as a result of the perturbation. Based on the analysis from previous length-related
+
+tests, we know that Dirichlet tends to penalize long documents more harshly, thus one
+
+possible explanation for this sudden drop is that when K is very large, the potential
+
+increase in the score of a document due to the increased occurrences of query terms
+
+cannot compensate for the decrease caused by the increase of document length. Since
+
+relevant documents tend to have more query terms, they get penalized more than
+
+nonrelevant documents, leading to the quick degradation of performance.
+
+To further look into this hypothesis, we perform another set of tests, that is, after
+
+performing query term growth tests, we perform a length variance reduction test again
+
+to make all the document lengths equal. In this way, we hope to factor out the effect
+
+of length normalization. The results are shown in Figure 11. We see that Dirichlet
+
+prior still has a quick drop for the single term growth test, which means that the drop
+
+was probably not caused by penalizing relevant documents (due to length normaliza-
+
+tion). Thus it is more likely that the reason was because some nonrelevant documents
+
+were rewarded because of excessive occurrences of a single query term. This prob-
+
+lem appears to be less serious in the case of majority term growth, which may be be-
+
+cause when more query terms are repeated simultaneously in the documents, relevant
+
+documents will likely beneﬁt more than nonrelevant documents. Thus Dirichlet prior
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:28
+
+H. Fang et al.
+
+Fig. 12.
+
+All query term growth tests.
+
+Table XX. Additional TF-LN Balance Test Results
+
+(Perturb Nonrelevant Docs Only)
+
+
+
+
+
+
+
+Pivoted
+
+
+
+Okapi
+
+
+
+Dirichlet
+
+
+
+PL2
+
+
+
+
+
+
+
+single
+
+
+
+constant
+
+
+
+0.455
+
+
+
+0.680
+
+
+
+1.29
+
+
+
+1.21
+
+
+
+
+
+(TG1)
+
+
+
+linear
+
+
+
+0.383
+
+
+
+0.624
+
+
+
+1.41
+
+
+
+1.19
+
+
+
+
+
+
+
+majority
+
+
+
+constant
+
+
+
+0.417
+
+
+
+0.637
+
+
+
+1.58
+
+
+
+1.36
+
+
+
+
+
+(TG2)
+
+
+
+linear
+
+
+
+0.292
+
+
+
+0.517
+
+
+
+1.93
+
+
+
+1.34
+
+
+
+
+
+
+
+all
+
+
+
+constant
+
+
+
+0.222
+
+
+
+0.425
+
+
+
+1.93
+
+
+
+0.839
+
+
+
+
+
+(TG3)
+
+
+
+linear
+
+
+
+0.113
+
+
+
+0.284
+
+
+
+2.39
+
+
+
+0.967
+
+
+
+
+
+appears to differ from other methods in that it tends to rely more on the overall counts
+
+of terms, including repeated occurrences of the same term, when scoring a document,
+
+while others may put more emphasis on the matching of more distinct query terms.
+
+This distinct characteristic of Dirichlet prior is likely related to the independence as-
+
+sumption about multiple occurrences of the same term made in the Dirichlet prior
+
+method (which means that we would treat multiple occurrences of the same term as
+
+independent evidences).
+
+For the all query term growth test, the results for constant growth and linear growth
+
+are not conclusive, as shown in Figure 12 and Table XX. In the linear growth test,
+
+pivoted has the smallest PR value, which means that it cannot balance TF and LN
+
+very well in these cases, because the increase of TF in pivoted cannot compensate for
+
+the penalty caused by the document length. This observation is also consistent with
+
+our analysis of the relevant document length scaling test.
+
+5.4. Summary of Diagnostic Evaluation Results
+
+All the results presented in the previous subsection clearly demonstrate that the pro-
+
+posed diagnostic tests can help pinpoint the weaknesses and strengths of the four
+
+functions. Here we brieﬂy summarize our ﬁndings in Table XXI. Instead of presenting
+
+results measured by PR, we give a conﬁdence score to every pairwise comparison. The
+
+conﬁdence score is computed by the percentage of the datasets supporting the conclu-
+
+sion. For example, if 5 out of 6 datasets show that A performs better than B for test T,
+
+we have 83.3% conﬁdence to say that A performs better than B for test T.
+
+Comparing the ﬁndings from constraint analysis (as shown in Table VI) with those
+
+from diagnostic tests (as shown in Table XXI), we observe that many ﬁndings from
+
+these two strategies are consistent. First, constraint analysis shows that Okapi is
+
+the only retrieval function that satisﬁes both LN constraints, which is consistent with
+
+the results of LV1 test, that is, the implementation of LN in Okapi is better. Second,
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:29
+
+Table XXI. Summary of Diagnostic Results I (&gt;&gt; Means More Desirable, ? Represents Uncertainty)
+
+
+
+
+
+Tests
+
+
+
+P vs. D
+
+
+
+O vs. D
+
+
+
+O vs. P
+
+
+
+O vs. L
+
+
+
+L vs. P
+
+
+
+L vs. D
+
+
+
+
+
+
+
+LV1
+
+
+
+D &gt;&gt; P
+
+
+
+O &gt;&gt; D
+
+
+
+O &gt;&gt; P
+
+
+
+O &gt;&gt; L
+
+
+
+L &gt;&gt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+(66.7%)
+
+
+
+(83.3%)
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+
+
+
+
+
+
+
+
+Okapi has better implementation of LN
+
+
+
+
+
+
+
+LV2
+
+
+
+D &lt;&lt; P
+
+
+
+D &lt;&lt; O
+
+
+
+O &lt;&lt; P
+
+
+
+O &gt;&gt; L
+
+
+
+L?P
+
+
+
+L?D
+
+
+
+
+
+
+
+(83.3%)
+
+
+
+(83.3%)
+
+
+
+(66.7%)
+
+
+
+(66.7%)
+
+
+
+(50%)
+
+
+
+(50%)
+
+
+
+
+
+
+
+
+
+
+
+Piv. performs better in high-variance collections
+
+
+
+
+
+
+
+LV3
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+O &gt;&gt; P
+
+
+
+O?L
+
+
+
+L &gt;&gt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+(83.3%)
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+(50.0%)
+
+
+
+(83.3%)
+
+
+
+(83.3%)
+
+
+
+
+
+
+
+
+
+
+
+Dir.&amp;PL2 over-penalize long documents
+
+
+
+
+
+
+
+LV3-nonrel
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+P &gt;&gt; O
+
+
+
+O &gt;&gt; L
+
+
+
+L &lt;&lt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(83.3%)
+
+
+
+(100%)
+
+
+
+(83.3%)
+
+
+
+
+
+
+
+
+
+
+
+Dir.&amp;PL2 over-penalize long documents
+
+
+
+
+
+
+
+LV3-rel
+
+
+
+D &gt;&gt; P
+
+
+
+O &gt;&gt; D
+
+
+
+O &gt;&gt; P
+
+
+
+O?L
+
+
+
+L &gt;&gt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+(100%)
+
+
+
+(83.3%)
+
+
+
+(100%)
+
+
+
+(50%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+
+
+
+
+
+
+
+
+Piv. does not balance TF and LN well
+
+
+
+
+
+
+
+TN
+
+
+
+constant
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+P &gt;&gt; O
+
+
+
+O &gt;&gt; L
+
+
+
+L &lt;&lt; P
+
+
+
+L &lt;&lt; D
+
+
+
+
+
+
+
+
+
+(83.3%)
+
+
+
+(66.7%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(83.3%)
+
+
+
+
+
+
+
+
+
+linear
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+P = O
+
+
+
+O = L
+
+
+
+L = P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+
+
+
+
+
+
+
+
+Dir. over-penalizes long documents
+
+
+
+
+
+
+
+TN
+
+
+
+constant
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+P &gt;&gt; O
+
+
+
+O &gt;&gt; L
+
+
+
+L &lt;&lt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+-nonrel
+
+
+
+
+
+(83.3%)
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+
+
+
+
+
+
+linear
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+P &gt;&gt; O
+
+
+
+O &gt;&gt; L
+
+
+
+L &lt;&lt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+
+
+
+
+
+
+
+
+Dir. over-penalizes long documents
+
+
+
+
+
+
+
+TG1
+
+
+
+constant
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+O &gt;&gt; P
+
+
+
+O &lt;&lt; L
+
+
+
+L &gt;&gt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+(83.3%)
+
+
+
+(83.3%)
+
+
+
+(66.7%)
+
+
+
+
+
+
+
+
+
+linear
+
+
+
+P &gt;&gt; D
+
+
+
+O &gt;&gt; D
+
+
+
+O &gt;&gt; P
+
+
+
+O &lt;&lt; L
+
+
+
+L &gt;&gt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+
+
+(66.7%)
+
+
+
+(83.3%)
+
+
+
+(66.7%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(83.3%)
+
+
+
+
+
+
+
+
+
+
+
+Okapi favors documents with more distinct query terms; PL2 balances TF-LN well
+
+
+
+
+
+
+
+TG2
+
+
+
+constant
+
+
+
+D &gt;&gt; P
+
+
+
+D &gt;&gt; O
+
+
+
+P &gt;&gt; O
+
+
+
+O &lt;&lt; L
+
+
+
+L &gt;&gt; P
+
+
+
+L?D
+
+
+
+
+
+
+
+
+
+(66.7%)
+
+
+
+(83.3%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(83.3%)
+
+
+
+(50%)
+
+
+
+
+
+
+
+
+
+linear
+
+
+
+D &gt;&gt; P
+
+
+
+D &gt;&gt; O
+
+
+
+P &gt;&gt; O
+
+
+
+O &lt;&lt; L
+
+
+
+L &gt;&gt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+
+
+
+
+
+
+
+
+Dir. favors documents with more query terms; PL2 balances TF-LN well
+
+
+
+
+
+
+
+TG3
+
+
+
+constant
+
+
+
+D?P
+
+
+
+O &gt;&gt; D
+
+
+
+O &gt;&gt; P
+
+
+
+O &gt;&gt; L
+
+
+
+L &lt;&lt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+
+
+(50%)
+
+
+
+(66.7%)
+
+
+
+(66.7%)
+
+
+
+(83.3%)
+
+
+
+(83.3%)
+
+
+
+(83.3%)
+
+
+
+
+
+
+
+
+
+linear
+
+
+
+D &gt;&gt; P
+
+
+
+D &gt;&gt; O
+
+
+
+O &gt;&gt; P
+
+
+
+O &lt;&lt; L
+
+
+
+L &gt;&gt; P
+
+
+
+L &gt;&gt; D
+
+
+
+
+
+
+
+
+
+(100%)
+
+
+
+(66.7%)
+
+
+
+(66.7%)
+
+
+
+(66.7%)
+
+
+
+(100%)
+
+
+
+(100%)
+
+
+
+
+
+
+
+
+
+
+
+Piv. does not balance TF and LN well; PL2 balances TF-LN well
+
+
+
+
+
+P denotes pivoted, O denotes okapi, D denotes Dirichlet and L denotes PL2
+
+Dirichlet is diagnosed to over-penalize long documents based on both constraint
+
+analysis (i.e., LNC2) and diagnostic tests (i.e., LV3, LV3-nonrel, TN, and TN-nonrel).
+
+Finally, pivoted does not balance the TF and LN well based on the TF-LNC, LNC2,
+
+LV3-rel test, and TG3 test.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:30
+
+H. Fang et al.
+
+Table XXII. Weaknesses of Functions and Supporting Constraints/Tests
+
+
+
+
+
+
+
+Weaknesses
+
+
+
+Constraints
+
+
+
+Diagnostic tests
+
+
+
+
+
+
+
+
+
+Piv.
+
+
+
+can not balance TF and LN well
+
+
+
+TF-LNC
+
+
+
+LV3 (rel), TG3
+
+
+
+
+
+
+
+
+
+penalizes long documents more harshly
+
+
+
+LNC2
+
+
+
+LV3
+
+
+
+
+
+
+
+
+
+does not favor documents with more query terms
+
+
+
+—
+
+
+
+TG2
+
+
+
+
+
+
+
+Ok.
+
+
+
+does not favor documents with more query terms
+
+
+
+—
+
+
+
+TG2
+
+
+
+
+
+
+
+Dir.
+
+
+
+penalizes long documents more harshly
+
+
+
+LNC2
+
+
+
+LV3, LV3-nonrel,
+
+
+
+
+
+
+
+
+
+
+
+TN, TN-nonrel
+
+
+
+
+
+
+
+
+
+under-rewards matching more distinct query terms
+
+
+
+—
+
+
+
+TG1
+
+
+
+
+
+
+
+PL2
+
+
+
+overly-penalizes noise-dominated long documents
+
+
+
+—
+
+
+
+TN, TN-nonrel
+
+
+
+
+
+Although these ﬁndings from both constraint analysis and diagnostic tests are sim-
+
+ilar, the diagnostic tests are complementary with constraint analysis. Depending on
+
+the form of a retrieval function, it may be mathematically challenging to draw a clear
+
+conclusion from formal constraint analysis, thus constraint analysis alone may not be
+
+sufﬁcient; in contrast, the diagnostic tests can be applied to any retrieval function to
+
+experimentally analyze how well it satisﬁes various properties. Moreover, diagnostic
+
+tests can also provide additional information that can not be found using constraint
+
+analysis. For example, we could identify the unique advantage of pivoted, that is, it
+
+performs better when the document collection has larger length variance. Also, con-
+
+straint analysis was unable to reveal subtle differences in the implementations of TF in
+
+the analyzed retrieval functions, but diagnostic tests can reveal the unique strengths
+
+and weaknesses of TF implementation in these retrieval functions. In particular, the
+
+diagnostic tests show that PL2 can balance the TF and LN better than the other three
+
+functions while the constraints analysis cannot show it.
+
+Based on the results from constraint analysis and diagnostic tests, we summa-
+
+rize the weaknesses of every function in Table XXII.
+
+In the next section, we will
+
+show how we can leverage these ﬁndings to improve the state-of-the-art retrieval
+
+functions.
+
+6. IMPROVING RETRIEVAL FUNCTIONS
+
+We now present several ways to modify existing retrieval functions based on the re-
+
+sults of diagnostic tests, and compare the performance (i.e., MAP) of the modiﬁed
+
+functions with the existing retrieval functions. In addition to evaluating the modi-
+
+ﬁed retrieval functions on the datasets that we used to diagnose the original retrieval
+
+functions (which can indicate whether our diagnostic evaluation method can indeed
+
+provide useful guidance for improving the performance of a retrieval function on the
+
+same datasets), we also evaluate the modiﬁed functions on the following two addi-
+
+tional standard TREC collections to see whether our improvement can be generalized
+
+to other collections.
+
+— Robust04.
+
+TREC disk45 (minus congressional record) with 249 ofﬁcial topics of
+
+Robust track in 2004.
+
+— Robust05. AQUAINT data with 50 ofﬁcial topics used in Robust track 2005.
+
+In all the result tables,
+
+and
+
+indicate that the improvement is statistically
+
+signiﬁcant according to Wilcoxon signed rank test at the level of 0.05 and 0.1,
+
+respectively.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:31
+
+Table XXIII. Improvement of LN Modiﬁcations
+
+
+
+
+
+
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+Web
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+
+
+Robust04
+
+
+
+Robust05
+
+
+
+
+
+
+
+
+
+Piv.
+
+
+
+
+
+0.176
+
+
+
+0.244
+
+
+
+0.288
+
+
+
+0.227
+
+
+
+0.179
+
+
+
+0.218
+
+
+
+
+
+0.241
+
+
+
+0.200
+
+
+
+
+
+
+
+MPln
+
+
+
+
+
+0.181
+
+
+
+0.250
+
+
+
+0.306
+
+
+
+0.227
+
+
+
+0.180
+
+
+
+0.231
+
+
+
+
+
+0.245
+
+
+
+0.201
+
+
+
+
+
+
+
+
+
+Dir.
+
+
+
+
+
+0.186
+
+
+
+0.257
+
+
+
+0.302
+
+
+
+0.224
+
+
+
+0.180
+
+
+
+0.202
+
+
+
+
+
+0.251
+
+
+
+0.196
+
+
+
+
+
+
+
+MDln
+
+
+
+
+
+0.187
+
+
+
+0.260
+
+
+
+0.318
+
+
+
+0.225
+
+
+
+0.182
+
+
+
+0.205
+
+
+
+
+
+0.251
+
+
+
+0.196
+
+
+
+
+
+Table XXIV. LV test results for Modiﬁed
+
+Functions (over Six Datasets)
+
+
+
+
+
+Tests
+
+
+
+
+
+LV1
+
+
+
+LV2
+
+
+
+LV3
+
+
+
+
+
+
+
+Desirable value
+
+
+
+
+
+Low
+
+
+
+High
+
+
+
+High
+
+
+
+
+
+
+
+Pivoted
+
+
+
+
+
+0.914
+
+
+
+0.829
+
+
+
+0.850
+
+
+
+
+
+MPln
+
+
+
+
+
+0.888
+
+
+
+0.839
+
+
+
+0.930
+
+
+
+
+
+
+
+Dirichlet
+
+
+
+
+
+0.883
+
+
+
+0.811
+
+
+
+0.826
+
+
+
+
+
+MDln
+
+
+
+
+
+0.869
+
+
+
+0.816
+
+
+
+0.906
+
+
+
+
+
+6.1. Improving Length Normalization
+
+Both constraint analysis and diagnostic tests indicate that pivoted and Dirichlet suffer
+
+the problem of penalizing long documents too harshly. Thus one way to improve them
+
+is to modify their length normalization components heuristically as follows.
+
+MPln : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × TFPiv(t, D) × IDFPiv(t)
+
+
+
+LNPiv(D)λ
+
+MDln : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × TFIDFDir(t, D) − |Q| × LNDir(D)λ
+
+where 0 &lt; λ ≤ 1 and
+
+IDFPiv(t) = ln( N + 1
+
+
+
+df(t) )
+
+TFPiv(t, D) = 1 + ln(1 + ln(c(t, D)))
+
+LNPiv(D) = 1 − s + s |D|
+
+
+
+avdl
+
+TFIDFDir(t, D) = ln(1 +
+
+c(t, D)
+
+
+
+μ × p(t|C))
+
+LNDir(D) = ln(1 + |D|
+
+
+
+μ )
+
+A comparison of the upper-bound performance (i.e., optimized performance) of the
+
+modiﬁed functions and the original functions is shown in Table XXIII.
+
+It shows
+
+that such length normalization modiﬁcation indeed improves the performance in both
+
+cases. We also perform the diagnostic tests for these modiﬁed functions over the same
+
+six datasets that we used for such analysis earlier. Table XXIV shows that the PR val-
+
+ues of these modiﬁed functions are now more desirable (i.e., lower for LV1 and higher
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:32
+
+H. Fang et al.
+
+Table XXV. Improvement of TF Modiﬁcations
+
+
+
+
+
+
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+Web
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+
+
+Robust04
+
+
+
+Robust05
+
+
+
+
+
+
+
+
+
+Piv.
+
+
+
+
+
+0.176
+
+
+
+0.244
+
+
+
+0.288
+
+
+
+0.227
+
+
+
+0.179
+
+
+
+0.218
+
+
+
+
+
+0.241
+
+
+
+0.200
+
+
+
+
+
+
+
+MPtf1
+
+
+
+
+
+0.182
+
+
+
+0.248
+
+
+
+0.293
+
+
+
+0.227
+
+
+
+0.185
+
+
+
+0.222
+
+
+
+
+
+0.245
+
+
+
+0.201
+
+
+
+
+
+
+
+MPtf2
+
+
+
+
+
+0.182
+
+
+
+0.250
+
+
+
+0.297
+
+
+
+0.227
+
+
+
+0.187
+
+
+
+0.216
+
+
+
+
+
+0.246
+
+
+
+0.200
+
+
+
+
+
+
+
+
+
+Dir.
+
+
+
+
+
+0.186
+
+
+
+0.257
+
+
+
+0.302
+
+
+
+0.224
+
+
+
+0.180
+
+
+
+0.202
+
+
+
+
+
+0.251
+
+
+
+0.196
+
+
+
+
+
+
+
+MDtf1
+
+
+
+
+
+0.190
+
+
+
+0.261
+
+
+
+0.313
+
+
+
+0.229
+
+
+
+0.183
+
+
+
+0.227
+
+
+
+
+
+0.254
+
+
+
+0.204
+
+
+
+
+
+
+
+MDtf2
+
+
+
+
+
+0.188
+
+
+
+0.257
+
+
+
+0.313
+
+
+
+0.229
+
+
+
+0.185
+
+
+
+0.218
+
+
+
+
+
+0.252
+
+
+
+0.203
+
+
+
+
+
+for other tests) than the original ones in all the LV tests, which indicates that the
+
+modiﬁed functions have better implementation of the length normalization part.
+
+6.2. Improving TF Implementations
+
+The diagnostic results show that the TF implementation of Dirichlet and that of
+
+Okapi/pivoted represent two extreme cases: one is to favor documents with more query
+
+terms (i.e., larger sum of all query term occurrences), one is to favor documents with
+
+more distinct query terms. An ideal TF can be hypothesized to lie in somewhere be-
+
+tween the two extremes. Based on this intuition, we heuristically modify the pivoted
+
+and Dirichlet as follows.
+
+MPtf1 : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × tfidf1(t, D)
+
+
+
+LNPiv(D)
+
+MPtf2 : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × tfidf2(t, D)
+
+
+
+LNPiv(D)
+
+MDtf1 : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × tfidf1(t, D) − |Q| × LNDir(D)
+
+MDtf2 : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × tfidf2(t, D) − |Q| × LNDir(D)
+
+where
+
+tfidf1(t, D) = α × TFPiv(t, D) × IDFPiv(t) + (1 − α) × TFIDFDir(t, D)
+
+tfidf2(t, D) = α × TFOk(t, D) × IDFPiv(t) + (1 − α) × TFIDFDir(t, D)
+
+TFOk(t, d) = 2.2 × c(t, D)
+
+
+
+1.2 + c(t, D)
+
+and μ = 2000 in TFIDFDir(t, d), 0 ≤ α ≤ 1 and other notations are the same as
+
+explained at the beginning of the section.
+
+The optimal performance of the modiﬁed retrieval functions and that of the original
+
+retrieval functions are compared in Table XXV. The results show that the modiﬁcation
+
+can indeed improve performance. In addition, Table XXVI shows that the PR values
+
+of these modiﬁed functions are higher than the original ones in TG1 and TG2 tests,
+
+which means that the modiﬁcation corresponds to better implementation of the TF
+
+component.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:33
+
+Table XXVI. TG (constant) Test Results for
+
+Modiﬁed Functions (over Six Datasets)
+
+
+
+
+
+Tests
+
+
+
+
+
+TG1
+
+
+
+TG2
+
+
+
+TG3
+
+
+
+
+
+
+
+Desirable value
+
+
+
+
+
+High
+
+
+
+High
+
+
+
+High
+
+
+
+
+
+
+
+Pivoted
+
+
+
+
+
+0.840
+
+
+
+0.802
+
+
+
+0.730
+
+
+
+
+
+MPtf1
+
+
+
+
+
+0.861
+
+
+
+0.836
+
+
+
+0.723
+
+
+
+
+
+MPtf2
+
+
+
+
+
+0.866
+
+
+
+0.844
+
+
+
+0.721
+
+
+
+
+
+
+
+Dirichlet
+
+
+
+
+
+0.85
+
+
+
+0.823
+
+
+
+0.694
+
+
+
+
+
+MDtf1
+
+
+
+
+
+0.857
+
+
+
+0.828
+
+
+
+0.697
+
+
+
+
+
+MDtf2
+
+
+
+
+
+0.862
+
+
+
+0.835
+
+
+
+0.690
+
+
+
+
+
+Table XXVII. Additivity of TF and LN Modiﬁcations
+
+
+
+
+
+
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+Web
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+
+
+Robust04
+
+
+
+Robust05
+
+
+
+
+
+
+
+
+
+Piv.
+
+
+
+
+
+0.176
+
+
+
+0.244
+
+
+
+0.288
+
+
+
+0.227
+
+
+
+0.179
+
+
+
+0.218
+
+
+
+
+
+0.241
+
+
+
+0.200
+
+
+
+
+
+
+
+MPln
+
+
+
+
+
+0.181
+
+
+
+0.250
+
+
+
+0.306
+
+
+
+0.227
+
+
+
+0.180
+
+
+
+0.231
+
+
+
+
+
+0.245
+
+
+
+0.201
+
+
+
+
+
+
+
+MPtf2
+
+
+
+
+
+0.182
+
+
+
+0.250
+
+
+
+0.297
+
+
+
+0.227
+
+
+
+0.187
+
+
+
+0.216
+
+
+
+
+
+0.246
+
+
+
+0.200
+
+
+
+
+
+
+
+MPtf2ln
+
+
+
+
+
+0.186
+
+
+
+0.257
+
+
+
+0.314
+
+
+
+0.228
+
+
+
+0.187
+
+
+
+0.236
+
+
+
+
+
+0.251
+
+
+
+0.204
+
+
+
+
+
+
+
+
+
+Dir.
+
+
+
+
+
+0.186
+
+
+
+0.257
+
+
+
+0.302
+
+
+
+0.224
+
+
+
+0.180
+
+
+
+0.202
+
+
+
+
+
+0.251
+
+
+
+0.196
+
+
+
+
+
+
+
+MDln
+
+
+
+
+
+0.187
+
+
+
+0.260
+
+
+
+0.318
+
+
+
+0.225
+
+
+
+0.182
+
+
+
+0.205
+
+
+
+
+
+0.251
+
+
+
+0.196
+
+
+
+
+
+
+
+MDtf2
+
+
+
+
+
+0.188
+
+
+
+0.257
+
+
+
+0.313
+
+
+
+0.229
+
+
+
+0.185
+
+
+
+0.218
+
+
+
+
+
+0.252
+
+
+
+0.203
+
+
+
+
+
+
+
+MDtf2ln
+
+
+
+
+
+0.190
+
+
+
+0.263
+
+
+
+0.322
+
+
+
+0.230
+
+
+
+0.185
+
+
+
+0.228
+
+
+
+
+
+0.255
+
+
+
+0.203
+
+
+
+
+
+
+
+
+
+Okapi
+
+
+
+
+
+0.186
+
+
+
+0.251
+
+
+
+0.310
+
+
+
+0.226
+
+
+
+0.185
+
+
+
+0.225
+
+
+
+
+
+0.248
+
+
+
+0.201
+
+
+
+
+
+PL2
+
+
+
+
+
+0.183
+
+
+
+0.257
+
+
+
+0.314
+
+
+
+0.212
+
+
+
+0.188
+
+
+
+0.216
+
+
+
+
+
+0.252
+
+
+
+0.196
+
+
+
+
+
+6.3. Additivity of Modiﬁed TF and LN Implementations
+
+Since both LN and TF modiﬁcations are effective, we can combine them in the
+
+following way.
+
+MPtf2ln : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × tfidf2(t, D)
+
+
+
+LNPiv(D)λ
+
+MDtf2ln : S(Q, D) =
+
+�
+
+t∈Q∩D
+
+c(t, Q) × tfidf2(t, D) − |Q| × LNDir(D)λ
+
+The performance is reported in Table XXVII. Indeed, the combined modiﬁcations
+
+perform better than not only the original retrieval functions but also the individual
+
+modiﬁcations in almost all the cases based on comparisons of their optimal perfor-
+
+mances. As a reference, we also include the optimal performance of Okapi and PL2
+
+in the last two rows of the table; we see that both of our new functions (MPtf2ln and
+
+MDtf2ln) also perform better than Okapi and PL2 in most cases. The additivity of
+
+performance improvement of LN and TF presumably comes from the fact that they
+
+capture different weaknesses in a retrieval function (i.e., length normalization and TF
+
+implementation), which once again conﬁrms the usefulness of the diagnostic tests for
+
+obtaining insights to improve a retrieval function.
+
+6.4. Further Evaluation of MPtf2Ln and MDtf2Ln
+
+The results in Table XXVII show that the two derived new functions, MPtf2Ln and
+
+MDtf2Ln, perform better than all the existing retrieval functions not only on the
+
+datasets used to derive them but also on the two new datasets (i.e., Robust04 and
+
+Robust05). However, these results are based on the optimal performances of all the
+
+involved retrieval functions. Since the two new functions both have two additional
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:34
+
+H. Fang et al.
+
+Fig. 13.
+
+Parameter sensitivity: λ(Left), α(Right).
+
+Fig. 14.
+
+Comparison of new functions with their corresponding original functions (left: MPtf2ln; right:
+
+MDtf2ln).
+
+parameters, that is, α and λ, we now look into the sensitivity of performance to these
+
+parameters. In both functions, α controls the degree of TF modiﬁcation, while λ con-
+
+trols the degree of LN modiﬁcation.
+
+To examine the sensitivity to each parameter, we plot their sensitivity curves com-
+
+puted on the TREC7 dataset in Figure 13. Since α only affects the TF implementation,
+
+we plot its sensitivity curves using functions MPtf1, MPtf2, MDtf1, and MDtf2; sim-
+
+ilarly, λ only affects length normalization, thus we plot its sensitivity curves using
+
+functions MPln and MDln.
+
+From these curves, we see that the performance is less sensitive to parameter α
+
+than parameter λ, which may be because our modiﬁcation of TF is more conservative
+
+than the modiﬁcation of length normalization. But it clearly shows that the optimality
+
+of the length normalization component in a retrieval function can affect the retrieval
+
+performance signiﬁcantly. It appears that the optimal value of α is around 0.3 while
+
+that of λ is around 0.7, and if they are set nonoptimally, the modiﬁcations may not
+
+improve performance.
+
+To compare our modiﬁed functions with the original functions more fairly, we set
+
+α = 0.3 and λ = 0.7 in both MPtf2ln and MDtf2ln. With these two parameters ﬁxed,
+
+these two functions now both have precisely one parameter just like their correspond-
+
+ing original functions (i.e., s for MPtf2Ln and μ for MDtf2ln). We tune this single
+
+parameter for both the original functions and the new functions and compare their sen-
+
+sitivity curves on Robust04 and Robust05 in Figure 14. Since these two functions have
+
+been developed based on the other six datasets, comparing them with their original
+
+retrieval functions over these two new datasets would indicate well whether the new
+
+functions are generally more effective than the original functions. From this ﬁgure,
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:35
+
+Table XXVIII. Performance with Fixed Parameter Values
+
+
+
+
+
+
+
+
+
+Trec7
+
+
+
+Trec8
+
+
+
+Web
+
+
+
+AP
+
+
+
+DOE
+
+
+
+FR
+
+
+
+
+
+Robust04
+
+
+
+Robust05
+
+
+
+
+
+
+
+
+
+Piv.
+
+
+
+
+
+0.163
+
+
+
+0.225
+
+
+
+0.200
+
+
+
+0.219
+
+
+
+0.179
+
+
+
+0.168
+
+
+
+
+
+0.222
+
+
+
+0.170
+
+
+
+
+
+
+
+MPtf2ln
+
+
+
+
+
+0.178
+
+
+
+0.245
+
+
+
+0.255
+
+
+
+0.225
+
+
+
+0.186
+
+
+
+0.210
+
+
+
+
+
+0.244
+
+
+
+0.193
+
+
+
+
+
+
+
+
+
+(+9%)
+
+
+
+(+8%)
+
+
+
+(+28%)
+
+
+
+(+3%)
+
+
+
+(+4%)
+
+
+
+(+25%)
+
+
+
+
+
+(+10%)
+
+
+
+(+14%)
+
+
+
+
+
+
+
+
+
+Dir.
+
+
+
+
+
+0.186
+
+
+
+0.251
+
+
+
+0.301
+
+
+
+0.224
+
+
+
+0.180
+
+
+
+0.189
+
+
+
+
+
+0.246
+
+
+
+0.196
+
+
+
+
+
+
+
+MDtf2ln
+
+
+
+
+
+0.187
+
+
+
+0.258
+
+
+
+0.320
+
+
+
+0.229
+
+
+
+0.183
+
+
+
+0.214
+
+
+
+
+
+0.250
+
+
+
+0.200
+
+
+
+
+
+
+
+
+
+(+0.5%)
+
+
+
+(+3%)
+
+
+
+(+6%)
+
+
+
+(+2%)
+
+
+
+(+2%)
+
+
+
+(+13%)
+
+
+
+
+
+(+2%)
+
+
+
+(+2%)
+
+
+
+
+
+it is clear that both new functions improve over their corresponding original existing
+
+functions for essentially the entire range of the parameter values.
+
+We further show a detailed comparison of these two new functions with their corre-
+
+sponding original functions on all the eight datasets in Table XXVIII. We set α = 0.3
+
+and λ = 0.7 for both MPtf2ln and MDtf2ln, and set s = 0.2 and μ = 2000 for all
+
+the functions, which are the default values suggested in the previous studies [Singhal
+
+2001; Zhai and Lafferty 2001a].
+
+The results show that both MPtf2ln and MDtf2ln consistently improve over their
+
+original functions on all the datasets. The improvement of MPtf2ln over the pivoted
+
+normalization baseline is generally greater than that of MDtf2ln over the Dirichlet
+
+prior baseline, which is consistent with the upper-bound performance comparison
+
+shown in Table XXVII. Also, for both functions, the improvement on the two datasets
+
+known to have high variances in document lengths (i.e., Web and FR) appears to be
+
+more signiﬁcant than on other datasets. This is likely because on those two datasets,
+
+the gain from improved document length normalization is more signiﬁcant.
+
+Thus, all these results show that MPtf2ln and MDtf2ln (with α = 0.3 and λ = 0.7)
+
+can be recommended as improved versions of the original pivoted length normalization
+
+and Dirichlet prior retrieval functions.
+
+7. DISCUSSION
+
+A fundamental assumption made in our overall diagnostic methodology is that a good
+
+understanding of the weaknesses of a retrieval function is required in order to im-
+
+prove the function, and it is possible to discover and characterize the weaknesses of
+
+a retrieval function through examining how well it satisﬁes some desirable properties
+
+that we would expect a good retrieval function to satisfy. In this article, we proposed
+
+two synergistic ways to achieve this.
+
+First, we can formally deﬁne constraints that we want a retrieval function to satisfy
+
+based on major retrieval heuristics such as TF-IDF weighting and document length
+
+normalization, and check analytically whether a retrieval function satisﬁes each con-
+
+straint. These constraints are meant to capture general “universal” properties that
+
+we want every reasonable retrieval function to satisfy, thus they are deﬁned inde-
+
+pendently of speciﬁc relevance judgments for a query.
+
+A signiﬁcant advantage of
+
+deﬁning the constraints independently of relevance judgments is that we can study
+
+and compare retrieval functions analytically without needing experimentation. How-
+
+ever, because of their generality, the deﬁned constraints tend to be loose and far from
+
+sufﬁcient. Thus, while violation of a constraint implies weakness of a function and
+
+poor empirical performance, satisfying all the constraints does not guarantee good
+
+performance.
+
+In the second way, we design diagnostic tests to experimentally check whether a re-
+
+trieval function exhibits desirable empirical behaviors on test collections. Speciﬁcally,
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:36
+
+H. Fang et al.
+
+we will perturb a test collection to artiﬁcially vary certain statistical characteristics of
+
+documents and queries and check how a retrieval function responds to such perturba-
+
+tion. While both aim at revealing speciﬁc behavior of a retrieval function, the second
+
+way complements the ﬁrst way in that: (1) the diagnostic tests can reveal differences
+
+between retrieval functions even when they satisfy the same set of constraints, and (2)
+
+the diagnostic tests can be applied to any retrieval function while analytical analysis of
+
+constraints may be mathematically challenging for some retrieval functions. The diag-
+
+nostic tests can also help researchers discover new constraints to enhance constraint
+
+analysis, while constraint analysis can provide guidance on what diagnostic tests may
+
+be useful.
+
+Our study has demonstrated the usefulness of both ways of analyzing a retrieval
+
+function. Some of the state-of-the-art retrieval functions that we analyzed have been
+
+proposed for a long time. The fact that they still represent the state-of-the-art today
+
+suggests the difﬁculty in further improving them.3 Thus the consistent improvement
+
+of our modiﬁed retrieval functions over the original functions on all the datasets is
+
+quite encouraging. Since our modiﬁcation is directly guided by the results from the
+
+diagnostic tests, this indicates that the proposed diagnostic evaluation methodology
+
+can be used to effectively diagnose weaknesses and strengths of retrieval functions
+
+and generate insights about how to improve them; without such guidance, it would
+
+have been difﬁcult to generate a new robust function that can consistently perform
+
+better than these state-of-the-art functions.
+
+However, our study also has some limitations. First, although we have shown that
+
+the results of diagnostic evaluation of retrieval functions provide direct guidance for
+
+improving a retrieval function, our way of modifying the existing retrieval functions
+
+is somewhat ad hoc. It would be much more interesting to further explore more prin-
+
+cipled ways to address the weaknesses of these retrieval functions revealed through
+
+diagnostic evaluation. Second, the TF part and LN part in the Okapi and the TF
+
+part and IDF part in the PL2 cannot be separated easily, which makes it harder to
+
+address the weaknesses of each component separately. Although the results in Ta-
+
+ble XXVII show that both MPtf2ln and MDtf2ln can potentially perform better than
+
+Okapi and PL2, it is still unclear how we can directly modify Okapi and PL2 to address
+
+its weakness. Another limitation is that the constraints and diagnostic tests deﬁned in
+
+this article are restricted to the bag-of-words representation. Although the proposed
+
+general diagnostic evaluation methodology is potentially applicable to analyzing re-
+
+trieval functions based on other representations, how to further develop additional
+
+constraints and tests is, in general, challenging.
+
+8. RELATED WORK
+
+Many different retrieval models have been proposed, including vector space mod-
+
+els [Salton 1989; Salton and McGill 1983; Salton et al. 1975], probabilistic models
+
+[Amati and Rijsbergen 2002; Fuhr 1992; Lafferty and Zhai 2003; Ponte and Croft
+
+1998; Robertson and Sparck Jones 1976; Turtle and Croft 2003; van Rijbergen 1977],
+
+and logic-based models [Fuhr 2001; van Rijsbergen 1986; Wong and Yao 1995]. Our
+
+work provides a general methodology for diagnosing weaknesses and strengths of dif-
+
+ferent retrieval models so as to gain insights about how to improve them. We have
+
+shown that the proposed diagnostic evaluation method can allow us to better under-
+
+stand four representative state-of-the-art models (i.e., the pivoted length normaliza-
+
+tion model [Singhal et al. 1996a, 1998], the Okapi/BM25 retrieval model [Robertson
+
+
+
+3There are improved models (e.g., those based on pseudofeedback) that can outperform these basic models,
+
+but those models generally use additional information and are computationally more expensive.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:37
+
+and Walker 1994], the Dirichlet prior language model [Zhai and Lafferty 2001a]), and
+
+the PL2 model [Amati and Rijsbergen 2002; He and Ounis 2005], and further derive
+
+improved versions of some of them.
+
+Evaluation of an information retrieval system has been extensively studied (see,
+
+e.g., Sparck Jones and Willett [1997] and Voorhees [2007]). Some recent studies have
+
+focused on how to create a better pool and how to reduce the pool size while main-
+
+taining the conﬁdence of the evaluation results [Carterette and Allan 2005; Carterette
+
+et al. 2006; Cormack et al. 1998; Sanderson and Joho 2004; Soboroff et al. 2001; Zobel
+
+and Moffat 1998]. These studies mainly aim at establishing an evaluation methodology
+
+to evaluate a retrieval system from the perspective of the utility to users. As a result,
+
+the evaluation results are not always informative enough to directly explain perfor-
+
+mance differences among retrieval functions or provide guidance on how to improve
+
+the performance of a retrieval function. This is especially true when two retrieval
+
+functions perform similarly. The proposed diagnostic evaluation method in this article
+
+extends the traditional evaluation methodology to enable diagnosis of weaknesses of
+
+retrieval functions through constraint analysis and diagnostic tests.
+
+Studies of the pivoted normalization function Singhal et al. [1996a, 1998] demon-
+
+strate that a retrieval function can be improved if we could pinpoint its weakness.
+
+[Singhal et al. 1996a] observed the deﬁciency of a particular length normalization
+
+method, and proposed the pivoted normalization technique to modify the normaliza-
+
+tion function. They later noticed the poor performance of the logarithmic tf-factor on
+
+a TREC collection, found another deﬁciency of the implementation of the term fre-
+
+quency part [Singhal et al. 1998], and modiﬁed the TF part accordingly. However,
+
+their methods are not general and cannot be easily applied to identify weaknesses in
+
+other aspects; in contrast, the proposed diagnostic methodology in this article is more
+
+general and can be potentially applied to many retrieval heuristics.
+
+Previous work [Salton and Buckley 1988; Zobel 1998] has also attempted to iden-
+
+tify an effective retrieval formula through extensive empirical experiments, but the
+
+results are generally inconclusive with some formulas performing better under some
+
+conditions. Our diagnostic evaluation method offers more detailed and systematic un-
+
+derstanding of how well a retrieval function implements various heuristics, directly
+
+providing insights about how to improve a retrieval function.
+
+The proposed perturbation-based diagnostic methodology assumes that retrieval
+
+performance is closely related to the robustness of a retrieval function to noisy data,
+
+which is in spirit similar to some previous work on noisy data [Lopresti and Zhou 1996;
+
+Singhal et al. 1996b]. A similar idea has also been used to predict query performance
+
+in Zhou and Croft [2006]. The RIA workshop [Harman and Buckley 2004] has resulted
+
+in some interesting observations about the empirical behavior of retrieval functions
+
+through a group effort on manually analyzing performance patterns of different re-
+
+trieval functions. Wong and coauthors [Wong et al. 2001] proposed an inductive theory
+
+for evaluation, but the proposed theory is too abstract to deal with term weighting.
+
+On the contrary, our proposed methodology provides an effective way of evaluating
+
+different term weighting strategies implemented in retrieval functions.
+
+The formalization of retrieval constraints was initially reported in Fang et al. [2004].
+
+In this article, we extended and restructured the constraints slightly, and we further
+
+propose a supplementary diagnostic evaluation method based on collection perturba-
+
+tion. Retrieval constraints have been leveraged to derive new robust and effective
+
+retrieval functions (called the axiomatic approach) through searching in the “neigh-
+
+borhood” of existing retrieval functions for a better function [Fang and Zhai 2005] and
+
+accommodating semantic term matching [Fang 2008; Fang and Zhai 2006]; these re-
+
+lated studies can be regarded as successful applications of the proposed diagnostic
+
+evaluation methodology.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:38
+
+H. Fang et al.
+
+9. CONCLUSIONS AND FUTURE WORK
+
+Understanding weaknesses of state-of-the-art retrieval functions is essential to fur-
+
+ther improve them. In this article, we propose a novel general methodology to diagnose
+
+weaknesses and strengths of a retrieval function. The basic idea is to check how well a
+
+retrieval function implements necessary retrieval heuristics. We propose two comple-
+
+mentary ways to achieve this through analytical constraint analysis and experimental
+
+diagnostic tests, respectively.
+
+To analytically predict and compare the performance of a retrieval function, we
+
+formally deﬁne seven basic constraints that any reasonable retrieval function should
+
+satisfy, capturing several common heuristics, such as term frequency weighting, term
+
+discrimination weighting, and document length normalization. We check these seven
+
+constraints on four representative retrieval formulas analytically and derive speciﬁc
+
+conditions when a constraint is conditionally satisﬁed. The results of constraint analy-
+
+sis suggest several interesting hypotheses about the expected performance behavior of
+
+these retrieval functions. We design experiments to test these hypotheses using dif-
+
+ferent types of queries and different document collections. We ﬁnd that in many cases
+
+the empirical results indeed support these hypotheses. Speciﬁcally, when a constraint
+
+is not satisﬁed, it often indicates nonoptimality of the method. This is most evident
+
+from the analysis of Okapi and PL2, based on which we successfully predicted the
+
+nonoptimality of these two functions for verbose queries. In some other cases, when
+
+a method only satisﬁes a constraint for a certain range of parameter values, its per-
+
+formance tends to be poor when the parameter is out of this range, which is shown in
+
+the analysis of the pivoted normalization function and the PL2 function. In general,
+
+we ﬁnd that the empirical performance of a retrieval formula is tightly related to how
+
+well they satisfy these constraints. Thus the proposed constraints can provide a good
+
+explanation of many empirical observations (e.g., the relatively stable performance of
+
+the Okapi formula) and make it possible to evaluate a retrieval function analytically,
+
+which is extremely valuable for testing new retrieval models. Moreover, when a con-
+
+straint is not satisﬁed by a retrieval function, it often also suggests a way to improve
+
+the retrieval formula.
+
+Since constraint analysis is insufﬁcient if the analyzed retrieval function satisﬁes all
+
+the constraints or analytical analysis of constraints is mathematically difﬁcult, we fur-
+
+ther propose a diagnostic evaluation methodology to evaluate experimentally how well
+
+a retrieval function satisﬁes various retrieval heuristics and diagnose weaknesses and
+
+strengths of the retrieval function. We formally deﬁne a set of relevance-preserving
+
+collection perturbation operators which can change collection characteristics so as to
+
+reveal the weaknesses and strengths of retrieval functions in their implementation of
+
+a speciﬁc retrieval heuristic. These operators serve as basic tools for us to perform
+
+diagnostic tests. We present a common procedure to design the diagnostic tests for re-
+
+trieval models. Following the procedure, we design three sets of diagnostics tests and
+
+perform the tests on six representative datasets. Experiments show that the proposed
+
+methodology can: (1) identify the weaknesses and strengths of a retrieval function, (2)
+
+explain the empirical differences among retrieval functions, and (3) give hints on how
+
+a retrieval function should be modiﬁed to further improve the performance. Based
+
+on the hints obtained from the diagnostic tests, we derived two new retrieval func-
+
+tions MPtf2ln and MDtf2ln as improved versions of the pivoted length normalization
+
+retrieval function and the Dirichlet prior retrieval function, respectively. Both have
+
+been shown to outperform their corresponding original functions not only on the six
+
+datasets used to derive them, but also on two new datasets.
+
+Improving existing retrieval models is known to be a hard, yet very important, fun-
+
+damental problem. The proposed diagnostic evaluation methodology offers a new way
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:39
+
+to help researchers diagnose weaknesses and strengths of a retrieval function and
+
+gain insights about how to improve the function. Our work opens up many interest-
+
+ing future research directions. First, we have only managed to formalize three basic
+
+retrieval heuristics (TF, IDF, and document length normalization) in this article; yet,
+
+as we have shown, they are already very useful for analytically evaluating a retrieval
+
+function. It should be very interesting to further explore, formalize, and test additional
+
+retrieval heuristics (e.g., proximity [Tao and Zhai 2007]). With more constraints, con-
+
+straint analysis would be even more powerful. Second, as in the case of constraints,
+
+it is also very interesting to design more diagnostic tests to discover more interest-
+
+ing characteristics of different retrieval functions. It is also interesting to study the
+
+potential equivalence of a perturbation to a collection and a change to the functional
+
+form of a retrieval function. For example, smoothing of a document language model
+
+using a smoothing method such as Dirichlet prior may be regarded as perturbing a
+
+collection by adding pseudocounts of terms to each document. Third, in this article,
+
+we have used the insights obtained from diagnostic evaluation of retrieval functions
+
+to heuristically improve some existing retrieval functions. Although the improved ver-
+
+sions of these functions are shown to be more effective than the original functions, it
+
+would be more interesting to study how to systematically address the weaknesses of a
+
+retrieval function in a more principled way than simply introducing heuristic parame-
+
+ters. Fourth, the analysis in this article is restricted to the four basic retrieval models
+
+with no pseudofeedback; it would be interesting to apply the proposed method to an-
+
+alyze and improve pseudofeedback methods and more advanced estimation methods
+
+for language models (e.g., Lavrenko and Croft [2001] and Zhai and Lafferty [2001b]).
+
+Finally, we plan to extend our diagnostic evaluation study by exploring more rigorous
+
+mathematical formulations.
+
+APPENDIX
+
+Appendix: Constraint Analysis
+
+We now provide more details for the constraint analysis results described in Section 3.
+
+Instead of going through all constraints, we will focus on only a few as the representa-
+
+tives ones.
+
+The constraints analysis for the three TFCs are similar. We will use TFC1 as an
+
+example to show how to get the constraint analysis results for TFC constraints. TFC1
+
+requires that the ﬁrst partial derivative of a retrieval function with respect to term
+
+count, that is, c(t, D) should be positive when c(t, D) is larger than 0. With the notation
+
+x = c(t, D), we can rewrite the ﬁrst partial derivative of a retrieval function S as a
+
+function of x, that is, fS(x).
+
+fpiv(x) =
+
+c(t, Q)log N+1
+
+
+
+df(t)
+
+
+
+1 − s + s |D|
+
+
+
+avdl
+
+×
+
+1
+
+
+
+(1 + ln(x)) × x
+
+fokapi(x) = k1 · (k1 + 1) · (1 − b + b |D|
+
+
+
+avdl)
+
+
+
+(k1 · (1 − b + b |D|
+
+
+
+avdl) + x)2
+
+× lnN − df(t) + 0.5
+
+
+
+df(t) + 0.5
+
+×
+
+(k1 + 1) × c(t, D)
+
+
+
+k1((1 − b) + b |D|
+
+
+
+avdl) + c(t, D)
+
+fdir(x) =
+
+c(t, Q)
+
+
+
+(1 +
+
+x
+
+
+
+μ·p(t|C)) ×
+
+1
+
+
+
+μ·p(t|C)
+
+It is clear that fpiv and fdir are both larger than 0 when x is larger than 0. Thus,
+
+it means that pivoted normalization and Dirichlet prior can satisfy the TFC1 uncondi-
+
+tionally. Moreover, it is clear that whether the value of fokapi(x) is larger than 0 depends
+
+on whether the value of ln N−df(t)+0.5
+
+
+
+df(t)+0.5
+
+is larger 0, so Okapi satisﬁes TFC1 conditionally.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:40
+
+H. Fang et al.
+
+For the PL2 method, for the simplicity, we can take the derivative of tfnD
+
+t instead of
+
+c(t, D). Assuming x = tfnD
+
+t , we get
+
+fpl2(x) =
+
+1
+
+
+
+(1 + x)2 × (x + log(λt · x) + 1
+
+
+
+2x − log2(2π · x)
+
+
+
+2
+
+− log2e
+
+
+
+a
+
+).
+
+When x = 1, we have fpl2(x) = 1 + log(λt) + 0.5 − log(2π) ∗ 0.5 −
+
+1.44
+
+
+
+lambda. Thus, fpl2(x) &gt; 0
+
+requires that λt ∗ log(λt) + 0.18 ∗ λt ≥ log2e. When x is larger, the lower bound of the
+
+λt becomes smaller. Thus, in order for PL2 to satisfy TFC1, we need to set the value
+
+satisfying λt ∗ log(λt) + 0.18 ∗ λt ≥ log2e.
+
+We now discuss the constraint analysis results for TDC constraint. TDC requires
+
+that the ﬁrst partial derivative of a retrieval function with respect to the TD component
+
+should be positive with the term distriminative value, such as log N+1
+
+
+
+df(t) in the pivoted
+
+normalization method. Let us denote y = TD(t), that is, term discrimination value of
+
+term t, we can rewrite get the following ﬁrst partial derivative of a retrieval function
+
+S as a function of y, that is, gS(y).
+
+gpiv(y) = 1 + ln(1 + ln(c(t, D)))
+
+
+
+(1 − s) + s |D|
+
+
+
+avdl
+
+· c(t, Q)
+
+gokapi(y) =
+
+(k1 + 1) × c(t, D)
+
+
+
+k1((1 − b) + b |D|
+
+
+
+avdl) + c(t, D)
+
+× (k3 + 1) × c(t, Q)
+
+
+
+k3 + c(t, Q)
+
+gdir(y) = c(t, D) · c(t, Q)
+
+
+
+1 + y · c(t, D)
+
+gpl2(y) =
+
+1
+
+
+
+tfnD
+
+t + 1 × (tfnD
+
+t
+
+
+
+y
+
+− log2e
+
+
+
+y2 )
+
+Note that in pivoted, y = ln N+1
+
+
+
+df(t); in Okapi, y = ln N−df(t)+0.5
+
+
+
+df(t)+0.5 ; in Dirichlet, y =
+
+1
+
+
+
+μ·p(t|C);
+
+and in PL2, y = λt. It is clear that pivoted, Dirichlet, and Okapi can satisfy TDC
+
+unconditionally because the corresponding g functions are always larger than 0. For
+
+the PL2 method, with the notation tfnD
+
+t = c(t, D) ×log2(1 + c · avdl
+
+
+
+|D| ), and the assumption
+
+that |D| = avdl, gpl2(y) &gt; 0 requires that c &gt; 2
+
+log2e
+
+
+
+λt − 1.
+
+Finally, we brieﬂy explain how to analyze the PL2 method with the LNC2 con-
+
+straint. The results for the other three methods have been described in Section 3.
+
+Given the analysis results of TFCs for PL2, it can be easily shown that LNC2 is equiv-
+
+alent to saying that tfnD
+
+t increases when the values of c(t, D) and |D| increase. Assum-
+
+ing x = c(t, D) and y = |D|, we can rewrite tfnD
+
+t as a function of x and y.
+
+tfnD
+
+t = h(x, y) = x · log2(1 + cavdl
+
+
+
+y )
+
+Thus, LNC2 is equivalent to dh(x)
+
+
+
+dx
+
+&gt; 0 and dh(y)
+
+
+
+dy
+
+&gt; 0, which leads to c ≤ |D|
+
+
+
+avdl.
+
+ACKNOWLEDGMENTS
+
+We thank the anonymous reviewers for their useful comments, which have helped improving the quality of
+
+this article.
+
+REFERENCES
+
+AMATI, G. AND RIJSBERGEN, C. J. V. 2002. Probabilistic models of information retrieval based on measur-
+
+ing the divergence from randomness. ACM Trans. Inf. Syst. 20, 4, 357–389.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Diagnostic Evaluation of Information Retrieval Models
+
+7:41
+
+CARTERETTE, B. AND ALLAN, J. 2005. Incremental test collections. In Proceedings of the 14th International
+
+Conference on Information and Knowledge Management (CIKM’05).
+
+CARTERETTE, B., ALLAN, J., AND SITARAMAN, R. 2006. Minimal test collections for retrieval evaluation.
+
+In Proceedings of the ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+CORMACK, G. V., PALMER, C. R., AND CLARKE, C. L. 1998. Efﬁcient construction of large test collections.
+
+In Proceedings of the ACM-SIGIR Conference on Research and Development in Information Retrieval.
+
+FANG, H. 2008. A re-examination of query expansion using lexical resources. In Proceedings of the 46th
+
+Annual Meetings of the Association for Computational Linguistics.
+
+FANG, H., TAO, T., AND ZHAI, C. 2004. A formal study of information retrieval heuristics. In Proceedings of
+
+the ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+FANG, H. AND ZHAI, C. 2005. An exploration of axiomatic approaches to information retrieval. In Proceed-
+
+ings of the ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+FANG, H. AND ZHAI, C. 2006. Semantic term matching in axiomatic approaches to information retrieval. In
+
+Proceedings of the ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+FUHR, N. 1992. Probabilistic models in information retrieval. Comput. J. 35, 3, 243–255.
+
+FUHR, N. 2001. Language models and uncertain inference in information retrieval. In Proceedings of the
+
+Language Modeling and IR Workshop. 6–11.
+
+HARMAN, D. AND BUCKLEY, C. 2004. Sigir 2004 workshop: Ria and where can ir go from here. SIGIR Forum
+
+38, 2, 45–49.
+
+HE, B. AND OUNIS, I. 2005. A study of the dirichlet priors for term frequency normalisation. In Proceedings
+
+of the ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+HIEMSTRA, D. 2000. A probabilistic justiﬁcation for using tf-idf term wieghting in information retrieval.
+
+Int. J. Digital Libraries, 131–139.
+
+LAFFERTY, J. AND ZHAI, C. 2003. Probabilistic relevance models based on document and query generation.
+
+In Language Modeling and Information Retrieval, W. B. Croft and J. Lafferty Eds., Kluwer Academic
+
+Publishers.
+
+LAVRENKO, V. AND CROFT, B. 2001. Relevance-Based language models. In Proceedings of the Annual ACM
+
+SIGIR Conference on Research and Development in Information Retrieval. 120–127.
+
+LOPRESTI, D. AND ZHOU, J. 1996. Retrieval strategy for noisy text. In Proceedings of the Symposium on
+
+Document Analysis and Information Retrieval.
+
+PONTE, J. AND CROFT, W. B. 1998. A language modeling approach to information retrieval. In Proceedings
+
+of the Annual ACM SIGIR Conference on Research and Development in Information Retrieval. 275–281.
+
+ROBERTSON, S. AND SPARCK JONES, K. 1976. Relevance weighting of search terms. J. Amer. Soc. Inf. Sci.
+
+27, 129–146.
+
+ROBERTSON, S. AND WALKER, S. 1994. Some simple effective approximations to the 2-poisson model for
+
+probabilistic weighted retrieval. In Proceedings of the Annual ACM SIGIR Conference on Research and
+
+Development in Information Retrieval. 232–241.
+
+ROBERTSON, S. AND WALKER, S. 1997. On relevance weights with little relevance information. In Pro-
+
+ceedings of the Annual ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+16–24.
+
+ROBERTSON, S. E., WALKER, S., JONES, S., M.HANCOCK-BEAULIEU, M., AND GATFORD, M. 1995. Okapi
+
+at TREC-3. In Proceedings of the 3rd Text REtrieval Conference (TREC-3). D. K. Harman Ed., 109–126.
+
+SALTON, G. 1989. Automatic Text Processing: The Transformation, Analysis and Retrieval of Information
+
+by Computer. Addison-Wesley.
+
+SALTON, G. AND BUCKLEY, C. 1988. Term-Weighting approaches in automatic text retrieval. Inf. Process.
+
+Manag. 24, 513–523.
+
+SALTON, G. AND MCGILL, M. 1983. Introduction to Modern Information Retrieval. McGraw-Hill.
+
+SALTON, G., YANG, C. S., AND YU, C. T. 1975. A theory of term importance in automatic text analysis. J.
+
+Amer. Soc. Inf. Sci. 26, 1, 33–44.
+
+SANDERSON, M. AND JOHO, H. 2004. Forming test collections with no system pooling. In Proceedings of the
+
+ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+SHI, S., WEN, J.-R., YU, Q., SONG, R., AND MA, W.-Y. 2005. Gravitation-based model for information
+
+retrieval. In Proceedings of the ACM SIGIR Conference on Research and Development in Information
+
+Retrieval. 488–495.
+
+SINGHAL, A. 2001. Modern information retrieval: A brief overview. Bull. IEEE Comput. Soc. Techn. Com-
+
+mittee Data Engin. 24, 4, 35–43.
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7:42
+
+H. Fang et al.
+
+SINGHAL, A., BUCKLEY, C., AND MITRA, M. 1996a. Pivoted document length normalization. In Proceedings
+
+of the ACM SIGIR Conference on Research and Development in Information Retrieval. 21–29.
+
+SINGHAL, A., SALTON, G., AND BUCKLEY, C. 1996b. Length normalization in degraded text collections. In
+
+Proceedings of the Symposium on Document Analysis and Information Retrieval. 149–162.
+
+SINGHAL, A., CHOI, J., HINDLE, D., LEWIS, D. D., AND PEREIRA, F. C. N. 1998. ATT at TREC-7. In
+
+Proceedings of the Text REtrieval Conference. 186–198.
+
+SOBOROFF, I., NICHOLAS, C., AND CAHAN, P. 2001. Ranking retrieval systems without relevance judge-
+
+ments. In Proceedings of the ACM SIGIR Conference on Research and Development in Information Re-
+
+trieval.
+
+SPARCK JONES, K. AND WILLETT, P., EDS. 1997. Readings in Information Retrieval. Morgan Kaufmann
+
+Publishers.
+
+TAO, T. AND ZHAI, C. 2007. An exploration of proximity measures in information retrieval. In Proceedings
+
+of the ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+TURTLE, H. AND CROFT, W. B. 1991. Evaluation of an inference network-based retrieval model. ACM Trans.
+
+Inf. Syst. 9, 3, 187–222.
+
+VAN RIJBERGEN, C. J. 1977. A theoretical basis for theuse of co-occurrence data in information retrieval. J.
+
+Document., 106–119.
+
+VAN RIJSBERGEN, C. J. 1986. A non-classical logic for information retrieval. Comput. J. 29, 6.
+
+VOORHEES, E. M. 2007. Trec: Continuing information retrievals tradition of experimentation. Comm. ACM
+
+50, 11, 51–54.
+
+WONG, K.-F., SONG, D., BRUZA, P., AND CHENG, C.-H. 2001. Application of aboutness to func- tional
+
+benchmarking in information retrieval. ACM Trans. Infor. Syst. 19, 4, 337–370.
+
+WONG, S. K. M. AND YAO, Y. Y. 1995. On modeling information retrieval with probabilistic inference. ACM
+
+Trans. Inf. Syst. 13, 1, 69–99.
+
+ZHAI, C. AND LAFFERTY, J. 2001a. Model-based feedback in the language modeling approach to information
+
+retrieval. In Proceedings of the 10th International Conference on Information and Knowledge Manage-
+
+ment (CIKM’01). 403–410.
+
+ZHAI, C. AND LAFFERTY, J. 2001b. A study of smoothing methods for language models applied to ad hoc in-
+
+formation retrieval. In Proceedings of the Annual ACM SIGIR Conference on Research and Development
+
+in Information Retrieval. 334–342.
+
+ZHOU, Y. AND CROFT, W. B. 2006. Ranking robustness: a novel framework to predict query perfor-
+
+mance. In Proceedings of the 15th International Conference on Information and Knowledge Management
+
+(CIKM’06). 567.
+
+ZOBEL, J. 1998. How reliable are the results of large-scale information retrieval experiments? In Proceed-
+
+ings of the ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+ZOBEL, J. AND MOFFAT, A. 1998. Exploring the similarity space. SIGIR Forum 31, 1, 18–34.
+
+Received May 2007; revised September 2009; accepted March 2010
+
+ACM Transactions on Information Systems, Vol. 29, No. 2, Article 7, Publication date: April 2011.
+

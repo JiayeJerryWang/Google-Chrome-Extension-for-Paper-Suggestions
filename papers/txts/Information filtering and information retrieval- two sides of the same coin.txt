@@ -1,0 +1,3636 @@
+
+Illllllllll 
+
+I! I:=! I~ Ill I~ {= D I~ !1 ~ Ill 
+
+F 
+
+I 
+
+L 
+
+T 
+
+E 
+
+R 
+
+I 
+
+!t 
+
+G 
+
+Information 
+
+and Information 
+
+TWO Sides of the 
+
+Same Coin? 
+
+Nicholas J. Belkin and W. Bruce Croft 
+
+Information filtering is a name used to describe a variety of processes involving the 
+
+delivery of information to people who need it. Although this term is appearing quite often 
+
+in popular and technical articles describing applications such as electronic mail, 
+
+multimedia distributed systems, and electronic office documents, the distinction between 
+
+filtering and related processes such as retrieval, routing, categorization, and extraction 
+
+is often not dear. It is only by making that distinction, however, that the specific research 
+
+issues associated with filtering can be identified and addressed. 
+
+A reasonable first step in defining information filtering is to list the typical 
+
+characteristics or features of this process. The following features are the most commonly 
+
+mentioned: 
+
+• An information filtering system is an information system designed for unstructured 
+
+or semistructured data. This contrasts with a typical database application that involves 
+
+very structured data, such as employee records. The notion of structure being used here 
+
+is not only that the data conforms to a format such as a record type description, but also 
+
+that the fields of the records consist of simple data types with well-defined meanings. 
+
+It is possible, for example, to define a database type for a complex document, such as 
+
+a journal article, but the meaning of the text, figure and table components of that type 
+
+¢ONNUNle.INI, TIQNI Opllllil~-IMl/Decem}~er 1992/Vo|.35, No.12 ~ 
+
+
+
+
+are much less well-defined than a 
+
+typical component of an employee 
+
+record type, such as the salary. Email 
+
+messages 
+
+are 
+
+an 
+
+example 
+
+of 
+
+semistructured data in that they have 
+
+well-defined header fields and an 
+
+unstructured text body. 
+
+• Information filtering systems deal 
+
+primarily with textual information. 
+
+In fact, unstructured data is often 
+
+used as a synonym for textual data. It 
+
+is, however, more general than that 
+
+and should include other types of 
+
+data such as images, voice, and video 
+
+that are part of multimedia informa- 
+
+tion systems. None of these data 
+
+types are handled well by conven- 
+
+tional database systems, and all have 
+
+meanings that are difficult to repre- 
+
+sent. 
+
+• Filtering systems 
+
+involve large 
+
+amounts of data. Typical applications 
+
+would deal with gigabytes of text, or 
+
+much 
+
+larger 
+
+amounts 
+
+of 
+
+other 
+
+media. 
+
+• Filtering applications typically in- 
+
+volve streams of incoming data, ei- 
+
+ther 
+
+being broadcast by remote 
+
+sources (such as newswire services), 
+
+or sent directly by other sources 
+
+(email). Filtering has also been used 
+
+to describe the process of accessing 
+
+and 
+
+retrieving information 
+
+from 
+
+remote databases, in which case the 
+
+incoming data is the result of the 
+
+database searches. This scenario is 
+
+also used by the developers of sys- 
+
+tems 
+
+that 
+
+generate 
+
+"intelligent 
+
+agents" for searching remote, heter- 
+
+ogeneous databases. 
+
+• Filtering is based on descriptions 
+
+of individual or group information 
+
+preferences, often called profiles. 
+
+Such 
+
+profiles 
+
+typically represent 
+
+long-term interests. 
+
+• Filtering is often meant to imply 
+
+the removal of data from an incom- 
+
+ing stream, rather than finding data 
+
+in that stream. In the first case, the 
+
+users of the system see what is left 
+
+after the data is removed; in the lat- 
+
+ter case, they see the data that is ex- 
+
+tracted. A common example of the 
+
+first approach is an email filter de- 
+
+signed to remove '~junk" mail. Note 
+
+that this means profiles may not only 
+
+express what people want, but also 
+
+what they do not want. 
+
+This list of features suggests that 
+
+information 
+
+filtering 
+
+is 
+
+a 
+
+well- 
+
+Iliiillllll 
+
+F 
+
+I 
+
+L 
+
+T 
+
+E 
+
+R 
+
+l 
+
+N 
+
+G 
+
+defined and unique process. On 
+
+closer examination, however, many 
+
+of these features are virtually the 
+
+same as those found in a variety of 
+
+other text-based information sys- 
+
+tems. Text routing, for example, in- 
+
+volves sending relevant incoming 
+
+data to individuals or groups. This 
+
+process is essentially identical to fil- 
+
+tering. Categorization systems [11] 
+
+are designed to attach one or more 
+
+predefined categories to incoming 
+
+objects (this is done by newswire ser- 
+
+vices, for example). The major dif- 
+
+ference from filtering in this case is 
+
+the static nature of the categories, 
+
+when compared to profiles. Extrac- 
+
+tion systems [27] are somewhat dif- 
+
+ferent in that they emphasize the ex- 
+
+traction of facts from the text of 
+
+incoming objects, with the determi- 
+
+nation of which objects are relevant 
+
+being a secondary issue. Information 
+
+retrieval systems [22] share many of 
+
+the features of information filtering. 
+
+Indeed, Selective Dissemination of 
+
+Information (SDI) [14], one of the 
+
+original functions of information re- 
+
+trieval systems, appears to be identi- 
+
+cal to most information filtering ap- 
+
+plications. 
+
+A deeper understanding of the 
+
+differences between filtering and 
+
+other text-based processes, together 
+
+with a definition of the research is- 
+
+sues involved, requires a more de- 
+
+tailed comparison. This comparison, 
+
+which is the subject of this article, will 
+
+be based on models of information 
+
+retrieval developed over the past 20 
+
+years of research in this field. We will 
+
+develop a similar model for informa- 
+
+tion filtering, and compare these 
+
+models to define research issues. By 
+
+clarifying the similarities and differ- 
+
+ences between filtering and retrieval, 
+
+developers 
+
+of 
+
+filtering 
+
+systems 
+
+should be able to benefit from the 
+
+results obtained in related retrieval 
+
+experiments. 
+
+Models of Information Retrieval 
+
+and Filtering 
+
+General Concepts of Information 
+
+Retrieval and Information Filtering 
+
+Information retrieval (IR) has been 
+
+characterized in a variety of ways, 
+
+ranging from a description of its 
+
+goals, to relatively abstract models of 
+
+its components and processes. Al- 
+
+though not all of these characteriza- 
+
+tions have been in agreement with 
+
+one another, they all tend to share 
+
+some commonalities. Usually, an IR 
+
+system is considered to have the 
+
+function of "leading the user to those 
+
+documents that will best enable him/ 
+
+her to satisfy his/her need for infor- 
+
+mation" [17]. Somewhat more gener- 
+
+ally, "the goal of an information [re- 
+
+trieval] system is for the user to 
+
+obtain information from the knowl- 
+
+edge resource which helps her/him 
+
+in problem management" [1]. Such 
+
+functions, or goals, of IR have been 
+
+described in models of the type 
+
+shown in Figure 1. This model indi- 
+
+cates basic entities and processes in 
+
+the IR situation. 
+
+In this model, a person with some 
+
+goals and intentions related to, for 
+
+instance, a work task, finds that these 
+
+goals cannot be attained because the 
+
+person's resources or knowledge are 
+
+somehow inadequate. A characteris- 
+
+tic of such a "problematic situation" 
+
+[23] is an anomalous state of knowledge 
+
+(ASK) [2] or information need, which 
+
+prompts the person to engage in ac- 
+
+tive information-seeking behavior, 
+
+such as submitting a query to an IR 
+
+system. The query, which must be 
+
+expressed in a language understood 
+
+by the system, is a representation of 
+
+the information need. This is shown 
+
+on the right-hand side of Figure 1. 
+
+Due to the inherent difficulty of rep- 
+
+resenting ASKs [2], the query in an 
+
+IR system is always regarded as ap- 
+
+proximate and imperfect. 
+
+On the other side of Figure 1, the 
+
+focus of attention is the information 
+
+resources that the user of the IR sys- 
+
+tem will eventually access. Here, the 
+
+model considers the producers or au- 
+
+thors of texts*; the groupings of texts 
+
+into collections (e.g., databases); the 
+
+representation of texts; and, the organi- 
+
+zation of these representations into 
+
+databases of text surrogates. The pro- 
+
+cess of representing the meaning of 
+
+texts in a form more amenable to 
+
+processing by computer (sometimes 
+
+called indexing) is of central impor- 
+
+tance in IR. A typical surrogate 
+
+would consist of a set of index terms or 
+
+keywords. 
+
+The comparison of a query and sur- 
+
+rogates, or, in some cases, direct in- 
+
+teraction between the user and the 
+
+*We use text here as a general term that could 
+
+also include multimedia objects. 
+
+0 
+
+December 1992/Vol.35, No.12 /¢OMIJUNICATION| OFTHE ACM 
+
+
+
+
+texts or surrogates (as in hypertext 
+
+systems), leads to the selection of 
+
+possibly relevant retrieved texts. These 
+
+retrieved texts are then evaluated or 
+
+used, and either the user will leave 
+
+the IR system, or the evaluation leads 
+
+to some modification of the query, the 
+
+information need, or, more rarely, 
+
+the surrogates. The process of query 
+
+modification through user evalua- 
+
+tion is known as relevance feedback in 
+
+IR [22]. 
+
+Research in IR has not considered 
+
+all of the entities and processes 
+
+shown in Figure 1 with equal inter- 
+
+est. There have been, for instance, 
+
+almost no studies about the genera- 
+
+tion of texts, or of their producers, 
+
+and studies of the collection process 
+
+have been done almost solely in op- 
+
+erational terms. There has been 
+
+much experimental research in IR 
+
+that has concentrated on the pro- 
+
+cesses of text representation and or- 
+
+ganization, comparison, and query 
+
+modification. This research has been 
+
+concerned primarily with evaluation 
+
+of system performance, as measured 
+
+by precision and recall. Another line 
+
+of IR research has emphasized stud- 
+
+ies of the people involved in IR sys- 
+
+tems, and has investigated issues 
+
+such as how users get from goals or 
+
+information needs to queries; repre- 
+
+sentation of states of knowledge un- 
+
+derlying queries; the interactive pro- 
+
+cesses in IR, in particular, between 
+
+users and human intermediaries; the 
+
+evaluation of texts with respect to a 
+
+user's tasks and goals; and alternative 
+
+performance measures for interac- 
+
+tive systems. 
+
+Based on the general model of IR 
+
+in Figure 1, and the previous de- 
+
+scription of information filtering fea- 
+
+tures, a model of information filter- 
+
+ing that appears to describe the 
+
+major entities and processes involved 
+
+is presented in Figure 2. In this 
+
+model, information filtering begins 
+
+with people (the users of the filtering 
+
+system) who have relatively stable, 
+
+long-term, or periodic goals or desires 
+
+(e.g., accomplishing a work task, or 
+
+being entertained). Groups, as well as 
+
+individuals, can be characterized by 
+
+such goals. These then lead to regular 
+
+information interests (e.g., keeping up- 
+
+to-date on a topic) that may change 
+
+slowly over time as conditions, goals, 
+
+and knowledge change. Such infor- 
+
+mliinNiNiNi 
+
+m 
+
+3DmD 
+
+mqom 
+
+ 
+
+F 
+
+l 
+
+L 
+
+T 
+
+in: 
+
+R 
+
+l 
+
+N 
+
+G 
+
+Person with Goals, Tasks, 
+
+Producers of Texts 
+
+/ Intentions, Etc. 
+
+Text Collections 
+
+/ 
+
+Information Need or 
+
+(Databases) 
+
+Anomalous State of Knowledge 
+
+Representation 
+
+t 
+
+Representation 
+
+and Organization 
+
+/ 
+
+/ 
+
+Text Surrogates, 
+
+/ 
+
+Query 
+
+Organized 
+
+/ 
+
+Comparison 
+
+or Interaction 
+
+Retrieved Texts 
+
+Use and/or Evaluation 
+
+Modification 
+
+Users or Groups of Users 
+
+Producers of Texts 
+
+with Periodic or Long-Term 
+
+. 
+
+Goals, Tasks, Etc. 
+
+Distributors of Texts 
+
+Regular Information Interests 
+
+Distribution and 
+
+Representation 
+
+Representation 
+
+Text Surrogates 
+
+Profiles 
+
+Comparison 
+
+or Filtering 
+
+Retrieved Texts 
+
+Use and/or Evaluation 
+
+Modification 
+
+Pigure 1. A general model of Information retrieval 
+
+Figure 2. A general model of Information filtering 
+
+COHHUNICA?IONIOP'IPII41 tar.M/December 1992/Vol.35, No.12 3~ 
+
+
+
+
+mation interests lead the people to 
+
+engage in relatively passive forms of 
+
+information-seeking behavior, such 
+
+as having texts brought to their at- 
+
+tention. This is accomplished by rep- 
+
+resentation of the information inter- 
+
+ests as profiles or queries that can be 
+
+put to the filtering system. Such pro- 
+
+files have generally been construed 
+
+as good specifications of the infor- 
+
+mation interests. 
+
+On the left side of Figure 2, the 
+
+focus is on producers of texts, who are 
+
+often institutions, such as newspa- 
+
+pers, as well as individuals. These 
+
+institutions, 
+
+or 
+
+others, 
+
+such 
+
+as 
+
+newsgroups, undertake to distribute 
+
+the texts as they are generated, so 
+
+they can be brought to users' atten- 
+
+tion. To accomplish this, the texts are 
+
+represented and compared to the pro- 
+
+files. The comparison results in some 
+
+of the texts being brought to the 
+
+users' attention (being retrieved). 
+
+These texts are used (or not) and are 
+
+evaluated in terms of how well they 
+
+respond to the information interests 
+
+and their motivating goals. The eval- 
+
+uation may lead to modification of the 
+
+profiles and information interests. 
+
+The modified entities are used in 
+
+subsequent comparison processes. 
+
+In comparing and discussing Fig- 
+
+ures 1 and 2, we note that at this 
+
+rather abstract level the entities and 
+
+processes relevant to information fil- 
+
+tering are almost identical to those 
+
+that are relevant to IR. The major 
+
+differences appear to be: 
+
+• Where IR is typically concerned 
+
+with single uses of the system, by a 
+
+person with a one-time goal and one- 
+
+time query, information filtering is 
+
+concerned with repeated uses of the 
+
+system, by a person or persons with 
+
+long-term goals or interests. 
+
+• Where 
+
+IR 
+
+recognizes inherent 
+
+problems in the adequacy of queries 
+
+as representations of information 
+
+needs, filtering assumes that profiles 
+
+can be correct specifications of infor- 
+
+mation interests. 
+
+• Where IR is concerned with the 
+
+collection and organization of texts, 
+
+filtering is concerned with the distri- 
+
+bution of texts to groups or individu- 
+
+als. 
+
+• Where IR is typically concerned 
+
+with the selection of texts from a rel- 
+
+atively static database, filtering is 
+
+Illllllllll 
+
+Ol 13 WI:2 
+
+DI21CI 
+
+F 
+
+I 
+
+L 
+
+T 
+
+E 
+
+R 
+
+I 
+
+H 
+
+G 
+
+mainly concerned with selection or 
+
+elimination of texts from a dynamic 
+
+datastream. 
+
+• Where IR is concerned with re- 
+
+sponding to the user's interaction 
+
+with texts within a single informa- 
+
+tion-seeking episode, filtering is con- 
+
+cerned with long-term changes over 
+
+a series of information-seeking epi- 
+
+sodes. 
+
+In addition to these distinctions 
+
+based on the models of IR and filter- 
+
+ing, there seem to be some other, 
+
+contextual differences that might also 
+
+be relevant to research interests. 
+
+These arise from differences in the 
+
+social and/or practical situations with 
+
+which IR and filtering have been 
+
+concerned. Such differences could 
+
+be categorized according to differ- 
+
+ences associated with the texts, the 
+
+users, and the general environment 
+
+of concern to each. 
+
+• Text-related issues. For informa- 
+
+tion filtering, the timeliness of a text is 
+
+often of overriding significance. For 
+
+IR, this has typically not been the 
+
+case. 
+
+• User-related issues. IR has, by- 
+
+and-large, studied well-defined user 
+
+groups, 
+
+in 
+
+well-defined, 
+
+specific 
+
+domains, largely in science and tech- 
+
+nology. These users have almost al- 
+
+ways been highly motivated in their 
+
+information-seeking behaviors. Fil- 
+
+tering, however, is often concerned 
+
+with very undefined user communi- 
+
+ties, such as people seeking enter- 
+
+tainment in their homes, and with 
+
+highly varied domains. Also, motiva- 
+
+tion in the filtering environment can- 
+
+not always be assumed. 
+
+• Environmental issues. Here, the 
+
+most salient difference seems to be 
+
+that filtering is highly concerned, in 
+
+many situations, with issues of pri- 
+
+vacy; IR, for a variety of reasons, has 
+
+paid almost no attention to this kind 
+
+of problem. 
+
+Specific Models of Information 
+
+Retrieval 
+
+Having discussed the strong similari- 
+
+ties between IR and information fil- 
+
+tering in terms of processes such as 
+
+representation, 
+
+comparison, 
+
+and 
+
+modification, we shall conclude this 
+
+section with a brief overview of the 
+
+more specific models that have been 
+
+developed in IR. These models are 
+
+primarily focused on the comparison 
+
+process. The three major alternatives 
+
+are the Boolean, vector space and 
+
+probabilistic retrieval models. The 
+
+first of these is based on what is 
+
+called the "exact match" principle; 
+
+the other two on the concept of "best 
+
+match." For a detailed review, see 
+
+[2, 22]. 
+
+Boolean retrieval is based on the 
+
+concept of an exact match of a query 
+
+specification with one or more text 
+
+surrogates. The term "Boolean" is 
+
+used because the query specifications 
+
+are expressed as words or phrases, 
+
+combined using the standard opera- 
+
+tors of Boolean logic. In this retrieval 
+
+model, all surrogates, or more gener- 
+
+ally, texts, containing the combina- 
+
+tion of words or phrases specified in 
+
+the query are retrieved, and there is 
+
+no distinction made between any of 
+
+the retrieved documents. Thus, the 
+
+result of the comparison operation in 
+
+Boolean retrieval is a partition of the 
+
+database into a set of retrieved docu- 
+
+ments, and a set of not-retrieved doc- 
+
+uments. 
+
+The 
+
+Boolean, 
+
+exact-match 
+
+re- 
+
+trieval model is the standard model 
+
+for current large-scale, operational 
+
+information 
+
+retrieval 
+
+systems. 
+
+A 
+
+major problem with this model is that 
+
+it does not allow for any form of rele- 
+
+vance ranking of the retrieved docu- 
+
+ment set. That is, it is clear that some 
+
+texts are more likely to be relevant 
+
+(or are more relevant) to an informa- 
+
+tion need than others. Presenting 
+
+documents to the user in presumed 
+
+order of relevance results in more 
+
+effective and usable systems. Simi- 
+
+larly, excluding documents that do 
+
+not precisely match a query specifica- 
+
+tion results in lower effectiveness [21, 
+
+SO]. 
+
+Best-match retrieval models have 
+
+been proposed in response to the 
+
+problems of exact-match retrieval. 
+
+The most widely known of these is 
+
+the vector space model [22]. This 
+
+model treats texts and queries as vec- 
+
+tors in a multidimensional space, the 
+
+dimensions of which are the words 
+
+used to represent the texts. Queries 
+
+and texts are compared by compar- 
+
+ing the vectors, using, for example, 
+
+the cosine correlation similarity mea- 
+
+sure. The assumption is that the 
+
+more similar a vector representing a 
+
+text is to a query vector, the more 
+
+likely that the text is relevant to that 
+
+•2 
+
+December 1992/Vol.35, No.12 /COMMUNICATIONJOPTHBACM 
+
+
+
+
+query. In this model, an important 
+
+refinement is that the terms (or di- 
+
+mensions) of a query, or text repre- 
+
+sentation, can be weighted, to take ac- 
+
+count of their importance. These 
+
+weights are computed on the basis of 
+
+the statistical distributions of the 
+
+terms in the database, and in the 
+
+texts. 
+
+Probabilistic information retrieval 
+
+models are based on the Probability 
+
+Ranking Principle [16]. This states 
+
+that the function of an information 
+
+retrieval system is to rank the texts in 
+
+the database in the order of their 
+
+probability of relevance to the query, 
+
+given all the evidence available. This 
+
+principle takes into account that rep- 
+
+resentation of both information need 
+
+and text is uncertain, and the rele- 
+
+vance relationship between them is 
+
+also uncertain. The probabilistic re- 
+
+trieval model suggests there is a vari- 
+
+ety of sources of evidence that could 
+
+be used to estimate the probability of 
+
+relevance of a text to a query. The 
+
+most typical source of such evidence 
+
+is the statistical distribution of terms 
+
+in the database, and in relevant and 
+
+nonrelevant texts. The next section 
+
+contains a detailed discussion of a 
+
+probabilistic retrieval model and how 
+
+it could be applied to filtering. 
+
+It should be noted that both of the 
+
+best-match models mentioned here 
+
+can rank documents using Boolean 
+
+queries [21, 30]. The distinction be- 
+
+tween the form of the query and the 
+
+underlying retrieval model is an im- 
+
+portant one. 
+
+Probablllstlc Models of 
+
+Retrieval and Filtering 
+
+Filtering in the context of a specific 
+
+probabilistic retrieval model and an 
+
+implementation of that model will be 
+
+discussed in this section. The infer- 
+
+ence net model used for this purpose 
+
+has been shown to be general, in that 
+
+it can be used to describe other well- 
+
+known approaches to retrieval, and 
+
+effective, in that implementations of 
+
+the model achieve high levels of re- 
+
+call and precision relative to other 
+
+systems [30, 31]. The inference net 
+
+model also allows for a great deal of 
+
+flexibility in formulating a query and 
+
+relating the query concepts to the 
+
+concepts used to describe objects [6]. 
+
+The Retrieval Model 
+
+Probabilistic retrieval models com- 
+
+nuunnnnnnnn 
+
+a 
+
+aDD 
+
+aaam 
+
+ 
+
+F 
+
+I 
+
+L 
+
+T 
+
+E 
+
+R 
+
+I 
+
+N 
+
+G 
+
+pute P(I[Object), which is the prob- 
+
+ability that a user's information need 
+
+is satisfied given a particular object. 
+
+Objects are usually considered to 
+
+contain text, although in the context 
+
+of complex object retrieval, this is 
+
+often not the case. Our concern in 
+
+this article shall be mainly with text, 
+
+although we shall retain the term 
+
+"object" to indicate that the models 
+
+are more general. We consider an 
+
+information need as a complex prop- 
+
+osition about the content of an ob- 
+
+ject, with possible values true and 
+
+false. Queries are regarded as repre- 
+
+sentations of the information need. 
+
+The major difference between the 
+
+inference net model and other prob- 
+
+abilistic models is that the inference 
+
+net model emphasizes the use of 
+
+multiple sources of evidence to calcu- 
+
+late P(I[Object). 
+
+The inference net model is based 
+
+on Bayesian inference networks [15]. 
+
+These are directed, acyclic depend- 
+
+ency graphs in which nodes repre- 
+
+sent propositional variables or con- 
+
+stants 
+
+and 
+
+edges 
+
+represent 
+
+dependence relations between prop- 
+
+ositions. If a proposition represented 
+
+by a node p "causes" or implies the 
+
+proposition represented by node q, 
+
+we draw a directed edge from p to q. 
+
+The node q contains a matrix (a link 
+
+matrix) that specifies P(qlp) for all 
+
+possible values of the two variables. 
+
+When a node has multiple parents, 
+
+the matrix specifies the dependence 
+
+of that node on the set of parents and 
+
+characterizes the dependence rela- 
+
+tionship between that node and all 
+
+nodes 
+
+representing 
+
+its 
+
+potential 
+
+causes. Given a set of prior probabili- 
+
+ties for the roots of the network, 
+
+these networks can be used to com- 
+
+pute the probability or degree of be- 
+
+lief associated with all remaining 
+
+nodes. 
+
+Figure 3 shows the basic inference 
+
+network used in this article. The net- 
+
+work consists of an object network 
+
+and a query network. The object net- 
+
+work is built once for a collection and 
+
+its structure does not change during 
+
+query processing. The query net- 
+
+work consists of a single node repre- 
+
+senting the user's information need 
+
+and one or more query representa- 
+
+tions expressing that information 
+
+need. A query network is built for 
+
+each information need and is modi- 
+
+fled through interactive query for- 
+
+mulation or relevance feedback. 
+
+The object network consists of ob- 
+
+ject nodes (oj's) and concept repre- 
+
+sentation nodes (r,,'s). We represent 
+
+the assignment of a specific repre- 
+
+sentation concept to an object by a 
+
+directed arc to the representation 
+
+node from each node representing 
+
+an object to which the concept has 
+
+been 
+
+assigned. 
+
+A 
+
+representation 
+
+node contains a specification of the 
+
+conditional 
+
+probability 
+
+associated 
+
+with the node, given its set of parent 
+
+object nodes. Representation nodes 
+
+are generated through indexing, ei- 
+
+ther automatic or manual. In a typi- 
+
+cal information retrieval system, they 
+
+will correspond to words extracted 
+
+from the text [22], although repre- 
+
+sentations based on more sophisti- 
+
+cated language analysis are also pos- 
+
+sible. 
+
+The 
+
+estimation 
+
+of 
+
+the 
+
+probabilities P(rmJoj) is based on the 
+
+occurrence frequencies of concepts 
+
+in both individual objects and large 
+
+collections of objects. 
+
+The query network contains a sin- 
+
+gle node (I) corresponding to the 
+
+event that an information need is 
+
+met and multiple roots (qk's) corre- 
+
+sponding to the concepts that ex- 
+
+press the information need. A set of 
+
+intermediate query nodes may be 
+
+used to describe complex query net- 
+
+works, such as those formed with 
+
+Boolean expressions [6]. 
+
+For retrieval, a query network is 
+
+built through interaction with the 
+
+user, and attached to the object net- 
+
+work. This allows us to compute the 
+
+probability that the information need 
+
+is met for any particular object and, 
+
+consequently, to produce a ranked 
+
+list of objects. More details of this 
+
+process can be found in [30]. 
+
+The Filtering Model 
+
+Given the description of the retrieval 
+
+model in the previous subsection, we 
+
+can now describe a similar model for 
+
+information filtering that attempts to 
+
+incorporate the characteristic fea- 
+
+tures mentioned earlier in the article. 
+
+Figure 4 shows the structure of this 
+
+model. The differences between this 
+
+model and the retrieval model in Fig- 
+
+ure 3 reflect the fact that, in filtering, 
+
+an incoming stream of objects is com- 
+
+pared to many profiles at the same 
+
+time, rather than a single query 
+
+COHHUNI|ATIONIOPTHI 
+
+ACN/Deeember 1992/Vol.35, No.12 33 
+
+
+
+
+Incoming Object 
+
++ 
+
+Index 
+
+Calculate P(rto) estimates 
+
+Determine relevant profiles using 
+
+inverted files 
+
+Calculate P(plo) estimates 
+
+Select object for each profile where 
+
+P(pto) &gt; threshold 
+
+Present objects to users in (batched) 
+
+ranked order 
+
+Get user feedback and update profiles 
+
+Figure 3. Basic inference net- 
+
+work: oj's are object nodes, rm's 
+
+are concept nodes, qk's are query 
+
+nodes, and I represents the 
+
+user's information need. 
+
+Figure 4. Inference network for 
+
+filtering: oj is the node associ- 
+
+ated with the incoming object, 
+
+rm'S are concept nodes, qK's are 
+
+query nodes, and pj nodes repre- 
+
+sent the profiles. 
+
+Figure S. A filtering process 
+
+based on the inference net 
+
+IIIIlllIIIl 
+
+F 
+
+N 
+
+L 
+
+T 
+
+E 
+
+I~ 
+
+i 
+
+~ 
+
+being compared to a large, relatively 
+
+static database. Conceptually, this 
+
+means that, for every incoming ob- 
+
+ject oj, we compute the probabilities 
+
+associated with all profile nodes pl 
+
+through p,. Based on that computa- 
+
+tion, we "filter" the object, which may 
+
+mean removing the object from the 
+
+stream for a given profile or selecting 
+
+an object for a profile, depending on 
+
+the application. This filtering model 
+
+raises many more detailed issues, 
+
+however, that must be addressed in 
+
+order to build filtering systems. 
+
+These issues can be clarified by 
+
+considering a definition of filtering 
+
+in the context of the probabilistic 
+
+model. Given a particular object 
+
+from the incoming stream of objects 
+
+and a set of profiles, what exactly 
+
+does it mean to "filter" that object? 
+
+From an intuitive point of view, it 
+
+would seem reasonable to select the 
+
+best-matching profiles for the object. 
+
+This, however, is too simple to serve 
+
+as a general model. The inference 
+
+net model describes how to calculate 
+
+the probability that a given profile 
+
+(representing an information need) 
+
+is true given in the incoming object. 
+
+In the case of retrieval, this probabil- 
+
+ity is used to rank objects for presen- 
+
+tation to the user. This situation 
+
+would only occur in filtering, how- 
+
+ever, if we make the simplifying as- 
+
+sumption that incoming objects are 
+
+batched together and ranked relative 
+
+to each profile. Filtering in this case 
+
+becomes a minor variation of re- 
+
+trieval, and it results in all incoming 
+
+objects being presented (in different 
+
+rank orders) to the users associated 
+
+with every profile. Although this may 
+
+be feasible for some applications, 
+
+there are many in which this batch- 
+
+ing of incoming objects would not be 
+
+possible. 
+
+If we do not rank incoming objects 
+
+in batches, but instead must decide 
+
+on the relevance of each object as it 
+
+appears, then there are a number of 
+
+possibilities. We could, for example, 
+
+direct an object to the users associ- 
+
+ated with the top-ranking set of pro- 
+
+files. The problem with this ap- 
+
+proach is that we must choose some 
+
+fixed number of profiles from the 
+
+top of the ranking, without regard to 
+
+how well the profiles matched the 
+
+object. Alternatively, we could at- 
+
+tempt to set a threshold on how simi- 
+
+lar an object must be to a profile. A 
+
+more 
+
+formal 
+
+definition 
+
+of 
+
+this 
+
+threshold comes from interpreting 
+
+the 
+
+inference 
+
+net 
+
+model 
+
+as 
+
+a 
+
+Bayesian decision model. This means 
+
+we decide that an object oj is relevant 
+
+to a profile Pi if P(Pi is trueloj) &gt; P(Pi 
+
+is false]oj), assuming that the costs of 
+
+decision errors are equal [10]. The 
+
+problem of setting the threshold 
+
+then becomes the more general 
+
+problem of obtaining accurate prob- 
+
+ability estimates. 
+
+In general, then, filtering could be 
+
+defined as the process of determin- 
+
+ing which profiles have a high prob- 
+
+ability of being satisfied by a particu- 
+
+lar object from the incoming stream. 
+
+Objects with low probabilities for a 
+
+particular profile are removed from 
+
+the stream of objects directed to the 
+
+users associated with that profile. 
+
+Objects in that stream could be 
+
+batched and presented in ranked 
+
+order using the probabilities, if that 
+
+is appropriate for the application. 
+
+This model can handle "negative" 
+
+profiles 
+
+straightforwardly. 
+
+These 
+
+profiles describe the features of ob- 
+
+jects that are not wanted, rather than 
+
+the features that are wanted. Objects 
+
+that do not contain these features 
+
+have high probabilities of satisfying 
+
+the profile and will not be removed. 
+
+The implementation of a filtering 
+
+system based on this model involves 
+
+two main conceptual issues and a 
+
+number of efficiency problems. The 
+
+first issue is related to indexing, or 
+
+representing the contents of objects. 
+
+The indexing process in a text-based 
+
+filtering system will be essentially the 
+
+same as in a text retrieval system, 
+
+especially a system that deals with 
+
+heterogeneous databases. In order to 
+
+handle the many different formats of 
+
+the objects and the dynamic nature 
+
+of the language in those objects, it is 
+
+necessary to use fairly simple word- 
+
+and 
+
+phrase-based 
+
+indexing 
+
+tech- 
+
+niques [22]. It is important to realize, 
+
+however, that the representation of 
+
+the information need is not limited to 
+
+these simple features. More complex 
+
+features can be constructed from 
+
+these features using, for example, 
+
+Boolean 
+
+operators 
+
+[30], 
+
+phrase- 
+
+recognition techniques [6], and rules 
+
+[28]. These complex features can be 
+
+modeled directly in the inference net 
+
+framework. It would also be possible 
+
+34 
+
+December 1992/Vol.35, No.12 /COMMUHICATIONSOFTHIIACM 
+
+
+
+
+lllllIIllIl 
+
+Kl 
+
+nHl 
+
+ 
+
+MnnmlZl 
+
+F 
+
+l 
+
+L 
+
+T 
+
+E 
+
+R 
+
+i 
+
+H 
+
+G 
+
+to recognize these features using a 
+
+more sophisticated indexing process. 
+
+In the context of filtering, however, 
+
+where a large incoming stream of 
+
+documents may need to be indexed 
+
+very quickly, the retrieval effective- 
+
+ness benefits obtained from im- 
+
+proved indexing must be balanced 
+
+against the loss of indexing effi- 
+
+ciency. 
+
+The issue of probability estimation 
+
+is a major one in any retrieval system 
+
+(in some systems, the probabilities 
+
+are "weights"). In a filtering system, 
+
+the problem is worse in some re- 
+
+spects and better in others. The 
+
+problem is worse because objects ar- 
+
+rive in streams rather than being 
+
+available as static databases. The esti- 
+
+mation of the indexing probabilities 
+
+(P(rmIOj) in Figure 3) is done using 
+
+word and phrase frequencies in the 
+
+individual object text and in the data- 
+
+base of objects. To obtain accurate 
+
+estimates for the probabilities based 
+
+on the "universe" of objects, it is nec- 
+
+essary to base those estimates on 
+
+large samples of objects seen previ- 
+
+ously. It may even be necessary to 
+
+maintain these sample probabilities 
+
+for each of the sources of objects for 
+
+the filtering system. 
+
+Estimating the probabilities in the 
+
+query (or profile) network in a filter- 
+
+ing system is easier than in a retrieval 
+
+system because of the long-term na- 
+
+ture of the associated information 
+
+needs. In this situation, there are 
+
+likely to be many more examples of 
+
+objects that satisfied the profiles, and 
+
+therefore there is more opportunity 
+
+to learn the correct probabilities. Rel- 
+
+evance feedback techniques used in 
+
+retrieval systems [22] generally im- 
+
+prove the retrieval effectiveness sig- 
+
+nificantly and they are even more 
+
+likely to do so in a filtering system 
+
+[13]. 
+
+In terms of efficiency, the main 
+
+problem is that retrieval systems are 
+
+typically implemented using inverted 
+
+files of document representatives. In 
+
+the case of the inference net model, 
+
+the probabilities P(rmloj) in the object 
+
+network 
+
+are 
+
+precomputed 
+
+and 
+
+stored in inverted lists, one for each 
+
+concept [29]. This is a very efficient 
+
+approach when there are many ob- 
+
+jects to be compared to a single 
+
+query. For a filtering system, how- 
+
+ever, we will often be comparing a 
+
+single object to a large number (per- 
+
+haps thousands) of profiles, so it is 
+
+unlikely that the same implementa- 
+
+tion will suffice. Instead, each incom- 
+
+ing object could be indexed and have 
+
+the associated probabilities calculated 
+
+at filtering time. These probabilities 
+
+could then used to evaluate profile 
+
+networks containing the features 
+
+present in the object. To determine 
+
+which profiles satisfy that constraint, 
+
+assuming there are large numbers of 
+
+profiles, inverted lists of query con- 
+
+cepts could be constructed. 
+
+The filtering process suggested by 
+
+the model introduced in this section 
+
+is summarized in Figure 5. We be- 
+
+lieve this process could be used to 
+
+describe most of the filtering applica- 
+
+tions that have been suggested. In 
+
+addition, the filtering model clarifies 
+
+the assumptions and issues that un- 
+
+derlie such applications. 
+
+A final point to note is that, unlike 
+
+simpler models such as the vector- 
+
+space model [22], objects and profiles 
+
+are not symmetric in the inference 
+
+net model. By this, we mean that we 
+
+cannot simply turn the inference net 
+
+"upside down" to make the model in 
+
+Figure 4 look more like that in Fig- 
+
+ure 3. We cannot do this because we 
+
+do not really understand what the 
+
+probability P(ojlPi ) means or how to 
+
+compute it. The information need is 
+
+never "observed," since it is inside 
+
+peoples' heads. Although this makes 
+
+our filtering models somewhat more 
+
+complicated, we believe that the 
+
+probabilistic approach results in a 
+
+better understanding of the key is- 
+
+sues and new approaches to address- 
+
+ing them. 
+
+Lessons for Filtering from 
+
+Retrieval Research 
+
+Given that a number of components 
+
+of a text-based filtering system will be 
+
+virtually identical to those in a text 
+
+retrieval system, it is reasonable to 
+
+ask what has been learned from ex- 
+
+periments with text retrieval systems, 
+
+and how do those results apply to a 
+
+filtering system. Research in IR can 
+
+be classified into the three main cate- 
+
+gories mentioned earlier in this arti- 
+
+cle, and we will base our discussion of 
+
+this research on them. The catego- 
+
+ries of research are text representa- 
+
+tion, retrieval 
+
+(comparison) tech- 
+
+niques, 
+
+and 
+
+acquisition 
+
+of 
+
+information needs. 
+
+Text Representation 
+
+Text representation, or indexing, has 
+
+been one of the major foci of re- 
+
+search in IR [12, 18, 22, 25]. The re- 
+
+sult that is most important to filtering 
+
+is that simple word-based represen- 
+
+tations, when combined with appro- 
+
+priate retrieval models, are surpris- 
+
+ingly effective as well as being 
+
+efficient and straightforward to im- 
+
+plement. Indexing an object for fil- 
+
+tering using this approach consists of 
+
+lexical scanning to identify words, 
+
+morphological analysis to reduce dif- 
+
+ferent 
+
+word 
+
+forms 
+
+to 
+
+common 
+
+"stems," and counting occurrences of 
+
+those stems. The simplicity of this 
+
+process means that probabilistic ap- 
+
+proaches to filtering are feasible even 
+
+with very high volumes of incoming 
+
+objects. An extension of this index- 
+
+ing process that is very useful for 
+
+some applications is to include spe- 
+
+cial-purpose recognizers in the scan- 
+
+ner. Some important types of fea- 
+
+tures that could be recognized in this 
+
+way are company names, peoples' 
+
+names, dates, and locations. 
+
+More 
+
+sophisticated 
+
+representa- 
+
+tions based on natural language pro- 
+
+cessing techniques have yet to be 
+
+shown to be cost-beneficial. This in- 
+
+cludes even simple techniques such 
+
+as recognizing noun phrases using 
+
+syntactic or stochastic parsing. Al- 
+
+though there is some evidence that 
+
+the recognition of phrases in queries 
+
+using these techniques is effective 
+
+[6], the importance of a phrase-based 
+
+concept in an object can be generally 
+
+identified using simple word prox- 
+
+imity measures. Despite the difficulty 
+
+of making progress in this area, the 
+
+recent upsurge in interest in large- 
+
+scale applications of natural lan- 
+
+guage processing holds promise for 
+
+eventually improving the effective- 
+
+ness of filtering systems. The re- 
+
+search on text extraction carried out 
+
+under the DARPA-sponsored Mes- 
+
+sage Understanding and Evaluation 
+
+Conference [27], in particular, indi- 
+
+cates that advanced techniques can 
+
+be used to extract specific informa- 
+
+tion from text and could provide 
+
+more accurate evidence for the rele- 
+
+vance of text objects. The DARPA 
+
+TIPSTER program is continuing this 
+
+research, and is also undertaking the 
+
+first large-scale evaluations of filter- 
+
+ing techniques. 
+
+COMMUHICATIONSOWTHilACM/December 1992/Vol.35, No.12 ~S 
+
+
+
+
+IIIIlllIlll 
+
+F 
+
+I 
+
+L 
+
+T 
+
+E 
+
+R 
+
+I 
+
+N 
+
+G 
+
+Another representation technique 
+
+that has been extensively studied in 
+
+IR is clustering [33]. Document clus- 
+
+tering is used to group documents 
+
+with 
+
+related 
+
+representations 
+
+and 
+
+term clustering is used to group re- 
+
+lated words and phrases. In the case 
+
+of document clusters, representatives 
+
+of the clusters are used for compari- 
+
+son to the query, rather than the 
+
+original text representations 
+
+[24]. 
+
+The technique can be regarded, 
+
+therefore, as transforming the origi- 
+
+nal representations. Term clusters, 
+
+on the other hand, are typically used 
+
+to expand (or transform) the original 
+
+query representation. The experi- 
+
+ments that have been carried out 
+
+using these techniques have not es- 
+
+tablished 
+
+their 
+
+effectiveness, 
+
+al- 
+
+though a recent application of factor 
+
+analysis [7] has some promise. 
+
+Retrieval Techniques 
+
+The use of retrieval models as a basis 
+
+for retrieval techniques has been dis- 
+
+cussed earlier in this article. The 
+
+most important results in the IR lit- 
+
+erature in this area have to do with 
+
+the relative effectiveness of different 
+
+retrieval techniques and probability 
+
+estimation functions. 
+
+Given that ranking techniques 
+
+should be used to achieve good effec- 
+
+tiveness, a basic issue is how the 
+
+"score" of an object should be calcu- 
+
+lated. In probabilistic retrieval mod- 
+
+els, this involves estimating probabili- 
+
+ties. In the vector-space model, term 
+
+weights can be interpreted as prob- 
+
+ability estimates [31 ] and a great deal 
+
+of experimental work has been done 
+
+to evaluate alternative forms [19]. In 
+
+general, these are referred to as tf./df 
+
+weights, since they include a compo- 
+
+nent based on the frequency of a 
+
+word (or feature) in the text of an 
+
+object (the term frequency compo- 
+
+nent or tf), and a component based 
+
+on frequency of the word in the "uni- 
+
+verse" of objects (the inverse docu- 
+
+ment frequency or /df). The /df 
+
+weight increases as the frequency of 
+
+the 
+
+word 
+
+decreases 
+
+(hence 
+
+the 
+
+name). The retrieval system based on 
+
+the inference net model also uses a 
+
+form of tf.idfweight for estimation of 
+
+the P(rmIOj) values [30]. For a filtering 
+
+system to be effective, it is important 
+
+that similar estimation functions are 
+
+used. 
+
+ACquisition Of Information Needs 
+
+Acquiring accurate descriptions of 
+
+information needs is essential in a 
+
+retrieval system, and will be just as 
+
+crucial in a filtering system. As men- 
+
+tioned previously, the profiles in a 
+
+filtering system often represent long- 
+
+term interests, and there may be 
+
+more opportunities to improve the 
+
+quality of the profile. The research 
+
+in IR that is relevant to this aspect of 
+
+filtering has been in query formula- 
+
+tion and relevance feedback. 
+
+Research in query formulation has 
+
+focused on query languages and in- 
+
+teractive aids to formulation. It has 
+
+been shown, for example, that Bool- 
+
+ean queries are extremely difficult to 
+
+generate [4]. It has also been shown 
+
+that Boolean or structured queries 
+
+can be very effective when used with 
+
+an appropriate retrieval model [6, 
+
+21]. The additional 
+
+structure in 
+
+Boolean queries (compared to que- 
+
+ries expressed as sets of terms) can 
+
+describe important linguistic features 
+
+such as phrases. This suggests that 
+
+the filtering model should be able to 
+
+handle structured queries and that 
+
+interfaces should be designed to sup- 
+
+port structured query formulation. 
+
+It has been shown that user input 
+
+about concepts related to those men- 
+
+tioned in an initial query, together 
+
+with their relative importance, can 
+
+significantly improve retrieval effec- 
+
+tiveness [5]. Conversely, other exper- 
+
+iments have shown that expanding 
+
+queries by having users select addi- 
+
+tional concepts from lists suggested 
+
+by the system is often not effective 
+
+[8]. The reasons for these differences 
+
+are not clear, although it appears 
+
+that using only system suggestions is 
+
+too restrictive and does not make full 
+
+use of the user's domain knowledge. 
+
+The design of interfaces for filtering 
+
+systems, therefore, is not straightfor- 
+
+ward, and the primary components 
+
+should involve encouraging users to 
+
+be as specific as possible without lim- 
+
+iting them to a choice from a list of 
+
+topics. One possible approach is to 
+
+ask users for natural language de- 
+
+scriptions of interests, analyze these 
+
+descriptions using simple natural 
+
+language processing techniques to 
+
+isolate concepts, prompt users to 
+
+supply concepts related to those in 
+
+the initial statement and to indicate 
+
+which concepts are related. Systems 
+
+in which users are expected to supply 
+
+much more sophisticated descrip- 
+
+tions of information needs [28] are 
+
+limited to the small number of appli- 
+
+cations where this expectation is rea- 
+
+sonable. 
+
+The research on relevance feed- 
+
+back has shown that significant effec- 
+
+tiveness improvements can be gained 
+
+by using quite simple feedback tech- 
+
+niques [20]. There have also been 
+
+results showing that the problem of 
+
+choosing new terms from relevant 
+
+documents to add to queries becomes 
+
+worse in full text collections and in 
+
+applications where large numbers of 
+
+relevant documents are available to 
+
+train the system [13]. Techniques 
+
+that have been effective for feature 
+
+selection in situations having small 
+
+numbers of abstract length docu- 
+
+ments do not appear to be suffi- 
+
+ciently discriminating when used to 
+
+select from thousands of possible 
+
+features. This means that although 
+
+feedback is a necessary component of 
+
+a filtering system, more research is 
+
+necessary to identify the most appro- 
+
+priate feedback techniques for this 
+
+task. Relevance feedback can be im- 
+
+proved if users select features from 
+
+the texts of relevant documents [5], 
+
+but not from lists of terms selected 
+
+automatically from relevant docu- 
+
+ments. 
+
+Relevance feedback focuses on 
+
+training the system to respond to a 
+
+particular profile. It also appears 
+
+possible to learn probability estima- 
+
+tion functions (especially that used to 
+
+estimate P(r=[oj)) from the results of 
+
+many profile-object comparisons [9]. 
+
+This is particularly interesting for fil- 
+
+tering, given the large amount of 
+
+training data (relevance judgments) 
+
+that will typically be available. 
+
+Evaluation 
+
+The field of IR has devoted consid- 
+
+erable attention to the issue of eval- 
+
+uation 
+
+[22, 32]. The 
+
+distinction 
+
+between the efficiency and effective- 
+
+ness of a retrieval system was made 
+
+early, and the emphasis has been on 
+
+measuring effectiveness. A number 
+
+of measures have been developed, 
+
+with the best-known being recall and 
+
+precision. Precision is the proportion 
+
+of a retrieved set of documents that is 
+
+actually relevant. Recall is the pro- 
+
+portion of all relevant documents 
+
+3~ 
+
+December 1992/Vo1,35, No.12 /|OlllllllLIIIlCATlOIIIlIOPTIllllA¢il 
+
+
+
+
+||||||||||11 
+
+B3 O D  iB3amm  
+
+B = 
+
+m 
+
+L 
+
+T 
+
+E 
+
+R 
+
+l 
+
+H 
+
+6 
+
+that are actually retrieved. These fig- 
+
+ures are typically presented as aver- 
+
+ages over sets of queries. 
+
+In many filtering applications, re- 
+
+call and precision will be adequate 
+
+for evaluating effectiveness. It has 
+
+been pointed out, however, that eval- 
+
+uating a filtering system's perfor- 
+
+mance at selecting the right profiles 
+
+in response to incoming documents 
+
+can require variations of the stan- 
+
+dard measures [11]. One example of 
+
+the difference is that in a filtering 
+
+system, each incoming document 
+
+may have to be assigned to a subset of 
+
+the current profiles, whereas in the 
+
+retrieval context, 
+
+the assignment 
+
+does not have to be made because all 
+
+documents 
+
+are ranked 
+
+for each 
+
+query. The concern with establishing 
+
+ranking thresholds to determine as- 
+
+signments to profiles results, at the 
+
+very least, in different averaging 
+
+techniques being used in the evalua- 
+
+tion. 
+
+There is also concern being ex- 
+
+pressed in the IR community over 
+
+the value and validity of the standard 
+
+recall and precision measures in in- 
+
+teractive contexts [26]. Researchers 
+
+doing experiments with information 
+
+filtering will be able to benefit from 
+
+the long IR experience with evalua- 
+
+tion, but the development of criteria, 
+
+measures and methods tailored to 
+
+the evaluation of filtering systems is 
+
+an important issue that will also have 
+
+an impact on IR research. 
+
+Conclusion 
+
+We began this article by considering 
+
+the relationship between information 
+
+filtering and information retrieval. It 
+
+seems fair to say, after having exam- 
+
+ined the foundations of each of these 
+
+enterprises, that there is relatively lit- 
+
+fie difference between the two, at an 
+
+abstract level. First of all, their un- 
+
+derlying goals are essentially equiva- 
+
+lent. That is, both are concerned with 
+
+getting information to people who 
+
+need it, and both are concerned with 
+
+more-or-less the same kind of infor- 
+
+mation, and the same kind of con- 
+
+text. Furthermore, most of the issues 
+
+which appear at first to be unique to 
+
+information filtering, are really spe- 
+
+cializations of IR problems. The ex- 
+
+tended discussion of the probabilistic 
+
+inference net approach to IR, and its 
+
+application to information filtering, 
+
+seems to demonstrate this relation- 
+
+ship rather concretely. The conclu- 
+
+sion we draw from this is that much 
+
+of IR research experience is directly 
+
+relevant to filtering. 
+
+It is clear, however, that IR re- 
+
+search has ignored some aspects of 
+
+the general problem to which both 
+
+IR and information filtering address 
+
+themselves, and these are precisely 
+
+the aspects which are especially rele- 
+
+vant to the specific contexts of filter- 
+
+ing. The following is a summary of 
+
+specific issues that have been dis- 
+
+cussed in previous sections of this 
+
+article. 
+
+Learning and adaptation are is- 
+
+sues that have been of concern to IR 
+
+research, primarily through the con- 
+
+cept of relevance feedback. How- 
+
+ever, such research has been based 
+
+on relatively meager training sets, 
+
+and applied in fairly small databases. 
+
+Information filtering is concerned 
+
+with much larger data sets, and, gen- 
+
+erally, with information needs which 
+
+are relatively stable over relatively 
+
+long periods of time. 
+
+There has been relatively little 
+
+experience with the indexing of non- 
+
+textual data in IR. Information fil- 
+
+tering, in many of its contexts, is cru- 
+
+cially concerned with multimedia 
+
+texts. Although interest in this prob- 
+
+lem is converging for both fields, it 
+
+seems likely that this will be a more 
+
+important research issue for infor- 
+
+mation filtering than for IR in the 
+
+near-term future. 
+
+The timeliness of data is another 
+
+area of particular concern to filter- 
+
+ing. Research is needed on how to 
+
+represent temporal constraints, how 
+
+to understand when a text is likely to 
+
+be timely for a particular user, and 
+
+what timeliness means in specific 
+
+contexts. 
+
+Researchers studying filtering also 
+
+need to do a great deal of research 
+
+on the dimensions of users' informa- 
+
+tion interests: what they might be, 
+
+how to identify them, how to repre- 
+
+sent them, and how to modify them. 
+
+This is especially the case because fil- 
+
+tering is considering new classes of 
+
+users, uses and data, for which IR 
+
+does not, in general, have relevant 
+
+results. The study of the uses that 
+
+people make of texts, and the charac- 
+
+teristics of texts that are salient to 
+
+those uses, will be of major concern 
+
+in the context of information filter- 
+
+ing. In particular, applications such 
+
+as the recreational use of television 
+
+programming pose special problems 
+
+and opportunities for research in fil- 
+
+tering. 
+
+Finally, 
+
+information 
+
+filtering 
+
+clearly involves many economic and 
+
+social issues, associated with the pro- 
+
+duction and distribution of texts, that 
+
+have been of relatively little interest 
+
+to IR. Research in this area is likely to 
+
+focus on issues pertaining to privacy, 
+
+copyright, and access. 
+
+Thus, it seems there is indeed a 
+
+research agenda for filtering beyond 
+
+that which has been charted by IR. 
+
+While this agenda has much to do 
+
+with the contexts in which filtering is 
+
+likely to take place, and its applica- 
+
+tions, it is also based on the underly- 
+
+ing model of what it wants to do. 
+
+That model, although in many re- 
+
+spects equivalent to models of IR, 
+
+specifically extends it in some inter- 
+
+esting and important ways. This ex- 
+
+tension, and the research agenda 
+
+accompanying it, seems likely to be of 
+
+significance to IR as well as filtering, 
+
+since it addresses issues that should 
+
+be of importance to IR, but which IR 
+
+has not addressed, primarily because 
+
+of specialization to specific contexts 
+
+and users. 
+
+We conclude that information re- 
+
+trieval and information filtering are 
+
+indeed two sides of the same coin. 
+
+They work together to help people 
+
+get the information needed to per- 
+
+form their tasks. 
+
+[] 
+
+References 
+
+1. Belkin, N.J. Cognitive models and 
+
+information transfer. Soc. Sci. Inf. 
+
+Stud. 4 (1984), 111-129. 
+
+2. Belkin, N.J. and Croft, W.B. Re- 
+
+trieval techniques. In Annual Review 
+
+of Information Science and Technology, 
+
+M.E. Williams, Ed. Chapt. 4, pp. 109- 
+
+145. Elsevier, 1987. 
+
+$. Beikin, N.J., Oddy, R.N. and Brooks, 
+
+H.M. ASK for information retrieval: 
+
+Part I. Background and theory. J. 
+
+Doc. 38, 2 (June 1982), 61-71. 
+
+4. Borgman, C.L. All users of informa- 
+
+tion retrieval systems are not created 
+
+equal: An exploration into individual 
+
+differences. Inf. Process. Manage. 25, 3 
+
+(1989), 237-251. 
+
+5. Croft, W.B. and Das, R. Experiments 
+
+with query acquisition and use in doc- 
+
+ument retrieval systems. In Proceed- 
+
+ings of the ACM SIGIR Conference on 
+
+~uMuHIUTION$OP~|A~/December 
+
+1992/Vol.35, No.12 ~ 
+
+
+
+
+Research and Development in Informa- 
+
+tion Retrieval, (1990), pp. 349-368. 
+
+6. Croft, W.B., Turtle, H.R. and Lewis, 
+
+D.D. The use of phrases and struc- 
+
+tured queries in information re- 
+
+trieval. In Proceedings of the ACM 
+
+SIGIR Conference on Research and De- 
+
+velopment 
+
+in Information Retrieval, 
+
+(1991), pp. 32-45. 
+
+7. Deerwester, S., Dumais, S.T., Furnas, 
+
+G.W., Landauer, T.K. and Harsh- 
+
+man, R. Indexing by latent semantic 
+
+analysis.J. Am. Soc. Inf. Sci. 41 (1990), 
+
+391-407. 
+
+8. Ekmekcioglu, EC., Robertson, A.M. 
+
+and Willett, P. Effectiveness of query 
+
+expansion in ranked-output docu- 
+
+ment retrieval systems. J. Inf. Sci. 18 
+
+(1992), 139-147. 
+
+9. Fuhr, N. and Buckley, C. Probabilis- 
+
+tic document indexing from rele- 
+
+vance feedback data. In Proceedings of 
+
+the Thirteenth International Conference 
+
+on Research and Development in Infor- 
+
+mation Retrieval, Jean-Luc Vidick, Ed. 
+
+ACM, New York, Sept. 1990, pp. 45- 
+
+61. 
+
+10. Fukunaga, K. Ed. Introduction to Sta- 
+
+tistical Pattern Recognition. Academic 
+
+Press, 1990. 
+
+11. Lewis, D.D. An evaluation of phrasal 
+
+and clustered representations on a 
+
+text categorization task. In Proceed- 
+
+ings of the Fifteenth Annual International 
+
+ACM SIGIR Conference on Research and 
+
+Development in Information Retrieval 
+
+  ' VYou Need 
+
+Tree City USA 
+
+~
+
+~
+
+"
+
+ 
+
+~ity 
+
+trees add the soft 
+
+~l~][[Uli ~] 
+
+k..~touch of nature to our 
+
+- - ~ i ~  
+
+busy lives. They cool our 
+
+~ ' l ? '  
+
+cities, fight pollution, 
+
+i 
+
+conserve energy, give 
+
+wildlife a home, and make 
+
+our neighborhoods more 
+
+liveable. 
+
+Support Tree City USA 
+
+where you live. For your 
+
+free booklet, write: Tree 
+
+City USA, The National 
+
+Arbor Day Foundation, 
+
+Nebraska City, NE 68410. 
+
+O 
+
+l$1e Natkmal 
+
+Arbor Day ~ t i o n  
+
+P 
+
+I 
+
+L 
+
+T 
+
+E 
+
+R 
+
+I 
+
+N 
+
+G 
+
+(1992), pp. 37-50. 
+
+12. Lewis, D., Croft, W.B. and Bhandaru, 
+
+N. Language-oriented information 
+
+retrieval. Int. J. lntell. Syst. 4 (1989), 
+
+285-318. 
+
+13. Lewis, 
+
+D.D. 
+
+Representation 
+
+and 
+
+Learning in Information Retrieval. 
+
+Ph.D. dissertation, University of Mas- 
+
+sachusetts at Amherst, 1992. 
+
+14. Packer, K.H. and Soergel, D. The 
+
+importance of sdi for current aware- 
+
+ness in fields with severe scatter of 
+
+information. J. Am. Soc. Inf. Sci. 30, 3 
+
+(1979), 125-135. 
+
+15. Pearl, J. ProbabilisticReasoninginlntel- 
+
+ligent Systems: Networks of Plausible In- 
+
+ference. Morgan Kaufmann, 1988. 
+
+16. Robertson, S.E. The probability rank- 
+
+ing principle in IR.J. Doc. 33, 4 (Dec. 
+
+1977), 294-304. 
+
+17. Robertson, S.E. The methodology of 
+
+information retrieval experiment. In- 
+
+formation Retrieval Experinwnt. In K. 
+
+SparckJones, Ed. Chapt. 1, pp. 9-31. 
+
+Butterworths, 1981. 
+
+18. Sahon, G. Another look at automatic 
+
+text-retrieval systems. Commun. ACM 
+
+29, 7 (July 1986), 648-656. 
+
+19. Salton, G. and Buckley, C. Term 
+
+weighting approaches in automatic 
+
+text retrieval. Inf. Process. Manage. 24, 
+
+3 (1988), 513-524. 
+
+20. Salton, G. and Buckley, C. Improving 
+
+retrieval performance by relevance 
+
+feedback. JASIS 41 (1990), 288-297. 
+
+21. Salton, G., Fox, E. and Wu, H. Ex- 
+
+tended 
+
+Boolean 
+
+information 
+
+re- 
+
+trieval. Commun. ACM 26, 11 (Nov. 
+
+1983), 1022-1036. 
+
+22. Salton, G. and McGill, M.J. Introduc- 
+
+tion to Modern Information Retrieval. 
+
+McGraw-Hill, 1983. 
+
+23, Schutz, A. and Luckmann, T. Struc- 
+
+tures of the Life World. Northwestern 
+
+University Press, Evanston, Ill., 1973. 
+
+24. Sparck Jones, K. Automatic Keyword 
+
+Classification for Information Retrieval. 
+
+Archon, 1971. 
+
+25. SparckJones, K. Automatic indexing. 
+
+J. Doc. 30, 4 (1974), 393-432. 
+
+26. Su, L.T. Evaluation measures for in- 
+
+teractive information retrieval. Inf. 
+
+Process. Manage. 28, 4 (1992), 503- 
+
+516. 
+
+27. Sundheim, B. Ed. Proceedings of the 
+
+Third Message Understanding Evalua- 
+
+tion and Conference. Morgan Kauf- 
+
+mann, Los Altos, Calif., 1991. 
+
+28. Tong, R.M., Appeibaum, L.A. and 
+
+Askman, V.N. A knowledge repre- 
+
+sentation for conceptual information 
+
+retrieval. Int.J. Intell. Syst. 4, 3 (1989), 
+
+259-283. 
+
+29, Turtle, H. and Croft, W.B. Efficient 
+
+probabilistic inference for text re- 
+
+trieval. In Proceedings RIAO 3 (1991), 
+
+pp. 644-661. 
+
+30. Turtle, H.R. and Croft, W.B. Evalua- 
+
+tion of an inference network-based 
+
+retrieval model. ACM Trans. Inf. Syst. 
+
+3 (1991), 187-222. 
+
+31. Turtle, H.R. and Croft, W.B. A com- 
+
+parison of text retrieval models. C0m- 
+
+put. J. 35, 3 (1992), 279-290. 
+
+32. van Rijsbergen, C.J. Information Re- 
+
+trieval. Butterworths, 1979. 
+
+33. Willett, P. Recent trends in hierarchic 
+
+document clustering: A critical re- 
+
+view. Inf. Process. Manage. 24, 5 
+
+(1988), 577-598. 
+
+CR Categories and Subject Descrip- 
+
+tors: H.3.3 [Information Storage and 
+
+Retrieval]: Information Search and Re- 
+
+trieval-Retrieval models, search process 
+
+General Terms: Performance 
+
+Additional Key Words and Phrases: 
+
+Information filtering, information re- 
+
+trieval 
+
+About the Authors 
+
+NICHOLAS J. BELKIN is a professor in 
+
+the School of Communication, Informa- 
+
+tion and Library Studies at Rutgers Uni- 
+
+versity, and vice-chair of ACM SIGIR. 
+
+Current research interests include inter- 
+
+action in information retrieval systems, 
+
+interface design for information retrieval 
+
+systems, and evaluation of interactive in- 
+
+formation 
+
+systems. 
+
+Author's 
+
+Present 
+
+Address: School of Communication, In- 
+
+formation and Library Studies, Rutgers 
+
+University, 4 Huntington Street, Room 
+
+311, New Brunswick, NJ, 08903; email: 
+
+belkin@zodiac.rutgers.edu 
+
+W. BRUCE CROFT is a professor and 
+
+the director of the NSF Center for Re- 
+
+search on Intelligent Information Re- 
+
+trieval at the University of Amherst, and 
+
+past chair of ACM SIGIR. Current re- 
+
+search interests include formal models of 
+
+retrieval for complex text-based objects, 
+
+text representation techniques, and the 
+
+design and implementation of text re- 
+
+trieval systems. Author's Present Ad- 
+
+dress: Department of Computer Science, 
+
+University of Massachusetts, Amherst, 
+
+MA 01003; email: croft@perth.cs.umass. 
+
+edu 
+
+This work was supported in part by the Air 
+
+Force Office of Scientific Research under con- 
+
+tract 91-0324. 
+
+Permission to copy without fee all or part of this 
+
+material is granted provided that the copies are not 
+
+made or distributed for direct commercial advantage, 
+
+the ACM copyright notice and the title of the publi- 
+
+cation and its date appear, and notice is give that 
+
+copying is by permission of the Association for 
+
+Computing Machinery. To copy otherwise, or to 
+
+republish, requires a fee and/or specific permission. 
+
+© ACM 0002-0782/92/1200-029 $1.50 
+
+~8 
+
+December 1992/Vol.35, No.12 /COMNUHICATION|OImTHIIllliC/N 
+
+
+

@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "cheerio": "^1.0.0-rc.12",
+    "progress": "^2.0.3",
+    "puppeteer": "^19.2.2",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
+    "sync-request": "^6.1.0",
+    "xmldom": "^0.6.0",
+    "xpath": "^0.0.32"
+  }
+}
